@@ -13,6 +13,7 @@
 #endif
 
 #include "GLFW/glfw3.h"
+#include "TiffWriter.h"
 
 #ifndef __ParallelBalls__Display__
 #define __ParallelBalls__Display__
@@ -26,6 +27,10 @@ private:
     GLuint program;
     GLuint vao;
     GLuint positionBufferObject;
+    TiffWriter* writer;
+    char* pixbuf;
+    int height = 300;
+    int width = 400;
 public:
     Display(int N);
     int initialize();

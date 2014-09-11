@@ -1,2 +1,5 @@
 ParallelBalls.1
 build/
+.idea
+testing.tiff
+CMakeLists.txt

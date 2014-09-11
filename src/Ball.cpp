@@ -39,8 +39,8 @@ void Ball::update(double dt){
         delete force;
     }
     
-    Vx += fx*dt - 0.02*Vx*dt;
-    Vy += fy*dt - 0.02*Vy*dt;
+    Vx += fx*dt - 0.0*Vx*dt;
+    Vy += fy*dt - 0.0*Vy*dt;
     
     X += Vx*dt;
     Y += Vy*dt;

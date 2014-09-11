@@ -16,7 +16,6 @@
 #include <functional>
 #include "ExecutionService.h"
 
-const int N = 1251;
 const double DT = 0.01;
 const double rebound = 1;
 std::vector<Ball*> balls;
@@ -64,7 +63,7 @@ int main(int argc, const char * argv[])
 #ifdef DISPLAY
 void initializeGraphics(){
     
-    graphics = new Display(N);
+    graphics = new Display(balls.size());
     graphics->initialize();
 
 }
@@ -83,18 +82,19 @@ int updateGraphics(){
 void initialize(){
     
     double delta = 0.014;
-    for (int i = 0; i<25; i++){
-        for(int j = 0; j<50; j++){
-            Ball* ball = new Ball(i*delta, j*delta - 0.35);
+    for (int i = 0; i<75; i++){
+        for(int j = 0; j<140; j++){
+            Ball* ball = new Ball(i*delta - 0.2, j*delta - 0.97);
             balls.push_back(ball);
             
         }
     }
-    Ball* ball = new Ball(-0.8, 0);
-    ball->Vx = -0.1;
+    Ball* ball = new Ball(-0.5, 0);
+    ball->Vx = 0.5;
+    ball->Vy = 0.01;
     balls.push_back(ball);
-    
-    
+
+
 }
 
 
@@ -115,14 +115,22 @@ void step(){
                 double mag = dx*dx + dy*dy;
                 if(mag<min){
                     mag = sqrt(mag);
-                    b2->applyForce(-dx/mag, -dy/mag);
-                    b1->applyForce(dx/mag, dy/mag);
+                    dx = dx/mag;
+                    dy = dy/mag;
+
+                    double k = (b2->Vx - b1->Vx)*dx + (b2->Vy - b1->Vy)*dy;
+                    double fx = k*dx/DT;
+                    double fy = k*dy/DT;
+                    double dot = fx*dx + fy*dy;
+                    if(dot>0) {
+                        b2->applyForce(-fx, -fy);
+                        b1->applyForce(fx, fy);
+                    }
                 }
             }
             
             
-            b1->applyForce(0, -0.01);
-            //b1->update(DT);
+            //b1->applyForce(0, -0.01);
         };
         service.submit(f);
     }

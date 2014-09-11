@@ -34,7 +34,7 @@ const std::string fragmentStr(
 #endif
                               "out vec4 outputColor;\n"
                               "in vec2 texCoords;\n"
-                              "uniform float limit = 4.9e-6;\n"
+                              "uniform float limit = 3.6e-5;\n"
                               "void main(){\n"
                               "float m = dot(texCoords, texCoords);\n"
                               "if(m<limit){\n"
@@ -50,6 +50,7 @@ Display::Display(int nodes){
     //two positions per 6 vertices for each node
     positions = new float[4*6*nodes];
     N = nodes;
+
 }
 
 
@@ -72,13 +73,13 @@ int Display::initialize(){
 #endif
     
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1400, 1000, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(400, 300, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
-    
+
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
     
@@ -145,6 +146,11 @@ int Display::initialize(){
     glUseProgram(0);
     
     GetError();
+
+    //should be moved.
+    writer = new TiffWriter("testing.tiff",height, width);
+    pixbuf=new char[height*width*3];
+
     return 0;
 }
 
@@ -174,14 +180,21 @@ int Display::render(){
         
         /* Poll for and process events */
         glfwPollEvents();
-    //}
+        int last = 2000;
+        if(writer->getCount()<last) {
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixbuf);
+            writer->writeFrame(pixbuf);
+            if(writer->getCount()==last){
+                writer->close();
+                std::cout<<"finished writing\n";
+                glfwTerminate();
+            }
+        }
+        if(glfwWindowShouldClose(window)) return -1;
     
-    if(glfwWindowShouldClose(window)) return -1;
+        return 0;
     
-    return 0;
-    
-    //glfwTerminate();
-    
+
 }
 
 void Display::updateBall(int index, double x, double y, double radius){
