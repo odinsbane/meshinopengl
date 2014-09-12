@@ -19,7 +19,6 @@
 const double DT = 0.01;
 const double rebound = 1;
 std::vector<Ball*> balls;
-ExecutionService service(32);
 
 void step();
 void initialize();
@@ -49,6 +48,7 @@ int main(int argc, const char * argv[])
             step();
         }
         steps++;
+        if(steps==100) run = false;
 #ifdef GLFW_DISPLAY
         if(updateGraphics()!=0) run = false;
 #else
@@ -103,11 +103,17 @@ void initialize(){
 
 
 void step(){
-    for(auto itr = balls.begin(), end = balls.end(); itr!=end; itr++){
-        auto f = [itr, end](){
-            Ball* b1 = *itr;
-            for(auto otra = itr+1; otra!=end; otra++){
-                Ball* b2 =*otra;
+
+    const int end = balls.size();
+    int i;
+
+    # pragma omp parallel shared (balls) private (i)
+
+    # pragma omp for
+    for(i = 0; i<end; i++){
+            Ball* b1 = balls[i];
+            for(int j = i+1; j<end; j++){
+                Ball* b2 =balls[j];
                 double min = b1->radius + b2->radius;
                 min = min*min;
                 double dx = b1->X - b2->X;
@@ -135,15 +141,11 @@ void step(){
             
             
             //b1->applyForce(0, -0.01);
-        };
-        service.submit(f);
     }
     
-    service.waitForExecution();
-    
-    for(auto itr = balls.begin(), end = balls.end(); itr!=end; itr++){
-        Ball* b1 = *itr;
-        service.submit([b1](){
+    #pragma omp for
+    for(i=0; i<end; i++){
+            Ball* b1 = balls[i];
             b1->update(DT);
             if(b1->X - b1->radius < -1.0){
                 b1->X = b1->radius - 1;
@@ -160,10 +162,8 @@ void step(){
                 b1->Y = 1 - b1->radius;
                 b1->Vy = -fabs(b1->Vy);
             }
-        });
     }
     
-    service.waitForExecution();
 
 }
 
