@@ -7,6 +7,7 @@ TiffWriter::TiffWriter(const char* filename, int height, int width){
     this->width = width;
     count=0;
     bpp=3;
+    open=true;
     
 }
 
@@ -31,7 +32,12 @@ void TiffWriter::writeFrame(char* buffer){
 }
 
 void TiffWriter::close(){
-    TIFFClose(image);
+    if(open) TIFFClose(image);
+    open=false;
+}
+
+bool TiffWriter::isOpen(){
+    return open;
 }
 
 int TiffWriter::getCount(){return count;};

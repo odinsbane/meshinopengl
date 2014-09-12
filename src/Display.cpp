@@ -180,21 +180,25 @@ int Display::render(){
         
         /* Poll for and process events */
         glfwPollEvents();
-        int last = 2000;
-        if(writer->getCount()<last) {
+        if(writer->isOpen()) {
             glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixbuf);
             writer->writeFrame(pixbuf);
             if(writer->getCount()==last){
                 writer->close();
-                std::cout<<"finished writing\n";
-                glfwTerminate();
+                return -1;
             }
+
         }
         if(glfwWindowShouldClose(window)) return -1;
     
         return 0;
     
 
+}
+
+void Display::shutdown(){
+    writer->close();
+    glfwTerminate();
 }
 
 void Display::updateBall(int index, double x, double y, double radius){

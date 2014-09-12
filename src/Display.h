@@ -31,13 +31,16 @@ private:
     char* pixbuf;
     int height = 300;
     int width = 400;
+    int last = 2000;
+
 public:
     Display(int N);
     int initialize();
     void updateBall(int index, double x, double y, double radius);
     int render();
+    void shutdown();
     ~Display(){
-        
+        delete[] pixbuf;
     }
 };
 #endif /* defined(__ParallelBalls__Display__) */

@@ -5,12 +5,12 @@
 //  Created by msmith on 9/8/14.
 //  Copyright (c) 2014 paluchlab. All rights reserved.
 //
-#define DISPLAY
+#define GLFW_DISPLAY
 #include <iostream>
 #include <vector>
 #include "Ball.h"
 #include <math.h>
-#ifdef DISPLAY
+#ifdef GLFW_DISPLAY
   #include "Display.h"
 #endif
 #include <functional>
@@ -25,7 +25,7 @@ void step();
 void initialize();
 void display();
 
-#ifdef DISPLAY
+#ifdef GLFW_DISPLAY
 void initializeGraphics();
 int updateGraphics();
 Display* graphics;
@@ -34,7 +34,7 @@ int main(int argc, const char * argv[])
 {
     std::cout<< "initializing\n";
     initialize();
-#ifdef DISPLAY
+#ifdef GLFW_DISPLAY
     initializeGraphics();
 #endif
     
@@ -49,7 +49,7 @@ int main(int argc, const char * argv[])
             step();
         }
         steps++;
-#ifdef DISPLAY
+#ifdef GLFW_DISPLAY
         if(updateGraphics()!=0) run = false;
 #else
         display();
@@ -57,10 +57,14 @@ int main(int argc, const char * argv[])
 #endif
         
     }
+
+    #ifdef GLFW_DISPLAY
+        graphics->shutdown();
+    #endif
     return 0;
 }
 
-#ifdef DISPLAY
+#ifdef GLFW_DISPLAY
 void initializeGraphics(){
     
     graphics = new Display(balls.size());
