@@ -8,18 +8,15 @@
 #define GLFW_DISPLAY
 #include <iostream>
 #include <vector>
-#include "Ball.h"
 #include <math.h>
 #ifdef GLFW_DISPLAY
   #include "Display.h"
 #endif
-#include <functional>
-#include "ExecutionService.h"
+#include "rod.h"
 
 const double DT = 0.01;
 const double rebound = 1;
-std::vector<Ball*> balls;
-
+std::vector<Rod*> rods;
 void step();
 void initialize();
 void display();
@@ -67,16 +64,16 @@ int main(int argc, const char * argv[])
 #ifdef GLFW_DISPLAY
 void initializeGraphics(){
     
-    graphics = new Display(balls.size());
+    graphics = new Display(rods.size());
     graphics->initialize();
 
 }
 
 int updateGraphics(){
     int i = 0;
-    for(auto itr = balls.begin(), end = balls.end(); itr!=end; itr++){
-        Ball* b1 = *itr;
-        graphics->updateBall(i, b1->X, b1->Y, b1->radius);
+    for(auto itr = rods.begin(), end = rods.end(); itr!=end; itr++){
+        Rod* b1 = *itr;
+        graphics->updateRod(i, *b1);
         i++;
     }
     return graphics->render();
@@ -86,17 +83,16 @@ int updateGraphics(){
 void initialize(){
     
     double delta = 0.014;
-    for (int i = 0; i<75; i++){
-        for(int j = 0; j<140; j++){
-            Ball* ball = new Ball(i*delta - 0.2, j*delta - 0.97);
-            balls.push_back(ball);
+    for (int i = 0; i<21; i++){
+        for(int j = 0; j<21; j++){
+            Rod* rod = new Rod(0.1, 0.01);
+            rod->direction[1] = 1;
+            rod->position[0] = i*0.1 - 1;
+            rod->position[1] = j*0.1 - 1;
+            rods.push_back(rod);
             
         }
     }
-    Ball* ball = new Ball(-0.5, 0);
-    ball->Vx = 0.5;
-    ball->Vy = 0.01;
-    balls.push_back(ball);
 
 
 }
@@ -104,70 +100,9 @@ void initialize(){
 
 void step(){
 
-    const int end = balls.size();
-    int i;
-
-    # pragma omp parallel shared (balls) private (i)
-
-    # pragma omp for
-    for(i = 0; i<end; i++){
-            Ball* b1 = balls[i];
-            for(int j = i+1; j<end; j++){
-                Ball* b2 =balls[j];
-                double min = b1->radius + b2->radius;
-                min = min*min;
-                double dx = b1->X - b2->X;
-                if(dx*dx>min) continue;
-                
-                double dy = b1->Y - b2->Y;
-                if(dy*dy>min) continue;
-                
-                double mag = dx*dx + dy*dy;
-                if(mag<min){
-                    mag = sqrt(mag);
-                    dx = dx/mag;
-                    dy = dy/mag;
-
-                    double k = (b2->Vx - b1->Vx)*dx + (b2->Vy - b1->Vy)*dy;
-                    double fx = k*dx/DT;
-                    double fy = k*dy/DT;
-                    double dot = fx*dx + fy*dy;
-                    if(dot>0) {
-                        b2->applyForce(-fx, -fy);
-                        b1->applyForce(fx, fy);
-                    }
-                }
-            }
-            
-            
-            //b1->applyForce(0, -0.01);
-    }
-    
-    #pragma omp for
-    for(i=0; i<end; i++){
-            Ball* b1 = balls[i];
-            b1->update(DT);
-            if(b1->X - b1->radius < -1.0){
-                b1->X = b1->radius - 1;
-                b1->Vx = fabs(b1->Vx);
-            } else if(b1->X + b1->radius > 1.0){
-                b1->X = -b1->radius + 1;
-                b1->Vx = -fabs(b1->Vx);
-            }
-            
-            if(b1->Y - b1->radius<-1){
-                b1->Y = b1->radius - 1;
-                b1->Vy = fabs(b1->Vy);
-            } else if(b1->Y + b1->radius>1){
-                b1->Y = 1 - b1->radius;
-                b1->Vy = -fabs(b1->Vy);
-            }
-    }
-    
-
 }
 
 void display(){
-    Ball* ball = balls[0];
-    std::cout <<ball->X << "\t" << ball->Y << "\n";
+    Rod* rod = rods[0];
+    std::cout <<rod->position[0] << "\t" << rod->position[1] << "\n";
 }

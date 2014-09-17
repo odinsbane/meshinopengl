@@ -19,9 +19,11 @@
 #include <glm/geometric.hpp> //glm::dot
 
 namespace Line3D{
-    double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, glm::dvec3* point);
+    double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, const glm::dvec3 &point);
+    const glm::dvec3 origin(0,0,0);
 
 }
+
 class Box3D{
 public:
     double bx, by, bz, cx, cy, cz;

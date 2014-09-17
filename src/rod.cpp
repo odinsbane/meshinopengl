@@ -2,6 +2,34 @@
 #include <math.h>
 #include "rod.h"
 
+double Line3D::distance(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point) {
+    glm::dvec3 r = point - center;
+    double proj = glm::dot(direction,r);
+    double half = length/2.0;
+    if(proj<-half){
+        //bottom region of end point space
+        glm::dvec3 to_bottom(
+                center[0] - half*direction[0] - point[0],
+                center[1] - half*direction[1] - point[1],
+                center[2] - half*direction[2] - point[2]
+        );
+        return glm::length(to_bottom);
+    } else if(proj>half){
+        //top region
+        glm::dvec3 to_top(
+                    center[0] + half*direction[0] - point[0],
+                    center[1] + half*direction[1] - point[1],
+                    center[2] + half*direction[2] - point[2]
+        );
+        return glm::length(to_top);
+    } else{
+
+        glm::dvec3 normal(r[0] - proj*direction[0], r[1] - proj*direction[1], r[2] - proj*direction[2]);
+        return glm::length(normal);
+    }
+}
+
+
 bool checkAxis(double a_low, double a_high, double b_low, double b_high){
     return !(b_high<a_low || b_low>a_high);
 }
@@ -58,11 +86,12 @@ double Rod::closestApproach(Rod &other){
 
         if (p > h) {
             //no stalk space, pure cap.
+            glm::dvec3 pot(position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2]);
             return Line3D::distance(
                     other.position,
                     other.direction,
                     other.length,
-                    new glm::dvec3(position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2])
+                    pot
             );
         } else if (o > h && p > -h) {
 
@@ -78,12 +107,12 @@ double Rod::closestApproach(Rod &other){
                     other.position[1] + other.direction[1] * delta,
                     other.position[2] + other.direction[2] * delta
             );
-
+            glm::dvec3 pot(position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2]);
                 double cap_distance = Line3D::distance(
                         new_center,
                         other.direction,
                         l_c,
-                        new glm::dvec3(position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2])
+                        pot
                 );
 
 
@@ -92,43 +121,41 @@ double Rod::closestApproach(Rod &other){
                 //delta is in the opposite direction of the previous delta.
                 delta = dot < 0 ? l_c / 2 : -l_c / 2;
 
-                double[] stalk_center = new double[]{
+            glm::dvec3 stalk_center(
                     other.position[0] + other.direction[0] * delta,
                     other.position[1] + other.direction[1] * delta,
                     other.position[2] + other.direction[2] * delta
-            };
+            );
 
-                double[] r_stalk = Line3D.difference(stalk_center, position);
+            glm::dvec3 r_stalk = stalk_center - position;
 
-                z_norm = Line3D.dot(direction, r_stalk);
+                z_norm = glm::dot(direction, r_stalk);
 
-                double[] r_perp = new double[]{
+            glm::dvec3 r_perp(
                     r_stalk[0] - z_norm * direction[0],
                     r_stalk[1] - z_norm * direction[1],
                     r_stalk[2] - z_norm * direction[2]
-            };
+            );
 
-                double[] t_perp = new double[]{
+            glm::dvec3 t_perp(
                     other.direction[0] - dot * direction[0],
                     other.direction[1] - dot * direction[1],
                     other.direction[2] - dot * direction[2]
-            };
+            );
 
-                double m = Line3D.magnitude(t_perp);
+                double m = glm::length(t_perp);
                 double stalk_length = other.length - l_c;
                 double l_perp = m * stalk_length;
 
                 double stalk_distance;
 
                 if (m == 0) {
-                    stalk_distance = Line3D.magnitude(r_perp);
+                    stalk_distance = glm::length(r_perp);
                 } else {
                     //normalize.
-                    t_perp[0] = t_perp[0] / m;
-                    t_perp[1] = t_perp[1] / m;
-                    t_perp[2] = t_perp[2] / m;
+                    t_perp = glm::normalize(t_perp);
 
-                    stalk_distance = Line3D.distance(r_perp, t_perp, l_perp, new double[]{0, 0, 0});
+                    stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
                 }
 
 
@@ -153,18 +180,18 @@ double Rod::closestApproach(Rod &other){
                 bottom_delta = dot < 0 ? -bottom_delta : bottom_delta;
                 stalk_delta = dot < 0 ? -stalk_delta : stalk_delta;
 
-                double[] top_center = new double[]{
+            glm::dvec3 top_center(
                         other.position[0] + other.direction[0] * top_delta,
                         other.position[1] + other.direction[1] * top_delta,
                         other.position[2] + other.direction[2] * top_delta
-                };
+            );
 
-
-                    double top_distance = Line3D.distance(
+            glm::dvec3 pot(position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2]);
+                    double top_distance = Line3D::distance(
                             top_center,
                             other.direction,
                             l_top,
-                            new double[]{position[0] + direction[0] * h, position[1] + direction[1] * h, position[2] + h * direction[2]}
+                            pot
                     );
 
 
@@ -172,83 +199,83 @@ double Rod::closestApproach(Rod &other){
 
                     //delta is in the opposite direction of the cap region delta.
 
-                    double[] bottom_center = new double[]{
+            glm::dvec3 bottom_center(
                         other.position[0] + other.direction[0] * bottom_delta,
                         other.position[1] + other.direction[1] * bottom_delta,
                         other.position[2] + other.direction[2] * bottom_delta
-                };
+            );
 
-
-                    double bottom_distance = Line3D.distance(
+            glm::dvec3 pot2(position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]);
+                    double bottom_distance = Line3D::distance(
                             bottom_center,
                             other.direction,
                             l_bottom,
-                            new double[]{position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]}
+                            pot2
                     );
 
-                    double[] stalk_center = new double[]{
+            glm::dvec3 stalk_center(
                         other.position[0] + other.direction[0] * stalk_delta,
                         other.position[1] + other.direction[1] * stalk_delta,
                         other.position[2] + other.direction[2] * stalk_delta
-                };
+            );
 
-                    double[] r_stalk = Line3D.difference(stalk_center, position);
+            glm::dvec3 r_stalk = stalk_center - position;
 
-                    z_norm = Line3D.dot(direction, r_stalk);
+                    z_norm = glm::dot(direction, r_stalk);
 
-                    double[] r_perp = new double[]{
+            glm::dvec3 r_perp(
                         r_stalk[0] - z_norm * direction[0],
                         r_stalk[1] - z_norm * direction[1],
                         r_stalk[2] - z_norm * direction[2]
-                };
+            );
 
 
-                    double[] t_perp = new double[]{
+                glm::dvec3 t_perp(
                         other.direction[0] - dot * direction[0],
                         other.direction[1] - dot * direction[1],
                         other.direction[2] - dot * direction[2]
-                };
+                );
 
-                    double m = Line3D.magnitude(t_perp);
+                    double m = glm::length(t_perp);
                     double stalk_distance;
                     double l_perp = m * (l_stalk);
                     if (m == 0) {
-                        stalk_distance = Line3D.magnitude(r_perp);
+                        stalk_distance = glm::length(r_perp);
                     } else {
                         //normalize.
                         t_perp[0] = t_perp[0] / m;
                         t_perp[1] = t_perp[1] / m;
                         t_perp[2] = t_perp[2] / m;
 
-                        stalk_distance = Line3D.distance(r_perp, t_perp, l_perp, new double[]{0, 0, 0});
+                        stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
                     }
                     double caps = top_distance < bottom_distance ? top_distance : bottom_distance;
                     return caps < stalk_distance ? caps : stalk_distance;
 
                 } else if (o <= h && p > -h) {
                     //only stalk region
-                    double[] r_perp = new double[]{
+            glm::dvec3 r_perp(
                             r[0] - z_norm * direction[0],
                             r[1] - z_norm * direction[1],
                             r[2] - z_norm * direction[2]
-                    };
-                        double[] t_perp = new double[]{
+            );
+            glm::dvec3 t_perp(
                             other.direction[0] - dot * direction[0],
                             other.direction[1] - dot * direction[1],
                             other.direction[2] - dot * direction[2]
-                    };
-                        double m = Line3D.magnitude(t_perp);
+            );
+                        double m = glm::length(t_perp);
                         double l_perp = m * other.length;
 
                         if (m == 0) {
-                            return Line3D.magnitude(r_perp);
+                            return glm::length(r_perp);
                         }
                         //normalize.
                         t_perp[0] = t_perp[0] / m;
                         t_perp[1] = t_perp[1] / m;
                         t_perp[2] = t_perp[2] / m;
 
-                        return Line3D.distance(r_perp, t_perp, l_perp, new double[]{0, 0, 0});
+                        return Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
 
                     } else if (o > -h) {
                         //bottom cap and some stalk.
@@ -259,17 +286,19 @@ double Rod::closestApproach(Rod &other){
                         //move in opposite direction as the first case.
                         delta = dot > 0 ? -delta : delta;
 
-                        double[] new_center = new double[]{
+            glm::dvec3 new_center(
                                 other.position[0] + other.direction[0] * delta,
                                 other.position[1] + other.direction[1] * delta,
                                 other.position[2] + other.direction[2] * delta
-                        };
+            );
 
-                            double cap_distance = Line3D.distance(
+            glm::dvec3 pot(position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]);
+
+                            double cap_distance = Line3D::distance(
                                     new_center,
                                     other.direction,
                                     l_c,
-                                    new double[]{position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]}
+                                    pot
                             );
 
 
@@ -278,41 +307,41 @@ double Rod::closestApproach(Rod &other){
                             //delta is in the opposite direction of the cap region delta.
                             delta = dot > 0 ? l_c / 2 : -l_c / 2;
 
-                            double[] stalk_center = new double[]{
+            glm::dvec3 stalk_center(
                                 other.position[0] + other.direction[0] * delta,
                                 other.position[1] + other.direction[1] * delta,
                                 other.position[2] + other.direction[2] * delta
-                        };
+            );
 
-                            double[] r_stalk = Line3D.difference(stalk_center, position);
+            glm::dvec3 r_stalk = stalk_center - position;
 
-                            z_norm = Line3D.dot(direction, r_stalk);
+                            z_norm = glm::dot(direction, r_stalk);
 
-                            double[] r_perp = new double[]{
+            glm::dvec3 r_perp(
                                 r_stalk[0] - z_norm * direction[0],
                                 r_stalk[1] - z_norm * direction[1],
                                 r_stalk[2] - z_norm * direction[2]
-                        };
+            );
 
 
-                            double[] t_perp = new double[]{
+            glm::dvec3 t_perp(
                                 other.direction[0] - dot * direction[0],
                                 other.direction[1] - dot * direction[1],
                                 other.direction[2] - dot * direction[2]
-                        };
+            );
 
-                            double m = Line3D.magnitude(t_perp);
+                            double m = glm::length(t_perp);
                             double stalk_distance;
                             double l_perp = m * (other.length - l_c);
                             if (m == 0) {
-                                stalk_distance = Line3D.magnitude(r_perp);
+                                stalk_distance = glm::length(r_perp);
                             } else {
                                 //normalize.
                                 t_perp[0] = t_perp[0] / m;
                                 t_perp[1] = t_perp[1] / m;
                                 t_perp[2] = t_perp[2] / m;
 
-                                stalk_distance = Line3D.distance(r_perp, t_perp, l_perp, new double[]{0, 0, 0});
+                                stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
                             }
 
 
@@ -320,16 +349,17 @@ double Rod::closestApproach(Rod &other){
 
 
                         } else {
+            glm::dvec3 pot(position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]);
                             ////no stalk space, pure cap.
-                            return Line3D.distance(
+                            return Line3D::distance(
                                     other.position,
                                     other.direction,
                                     other.length,
-                                    new double[]{position[0] - direction[0] * h, position[1] - direction[1] * h, position[2] - h * direction[2]}
+                                    pot
                             );
                         }
-                        }
 }
+
 
 
 void Rod::updateBounds(){
@@ -366,28 +396,4 @@ void Rod::updateBounds(){
 
 Box3D& Rod::getBounds(){
     return bounds;
-}
-
-int main(int arg_c, char** args){
-    Rod r (1.0, 0.2);
-    r.direction[0] = 1.0;
-    r.updateBounds();
-
-    //doesn't create a copy.
-    Box3D& box = r.getBounds();
-    glm::dvec3 a;
-    glm::dvec3 b;
-    b[1] = 1.0;
-
-    r.direction[0] = 0.0;
-    r.direction[1] = 1.0;
-
-    r.updateBounds();
-    Box3D box2 = r.getBounds();
-    std::cout<<box2.contains(box)<<"\t";
-    std::cout<<box.contains(a)<<"\t";
-    std::cout<<box.contains(b)<<"\n";
-
-
-
 }

@@ -10,47 +10,16 @@
 #include "error.h"
 
 
-//simple shader output = input. texture coordinates are the xy, should make 4 copies of texture.
-const std::string vertexStr(
-#ifdef __APPLE__
-                            "#version 150\n"
-#else
-                            "#version 130\n"
-#endif
-                            "in vec4 pos;\n"
-                            "out vec2 texCoords;\n"
-                            "void main(){\n"
-                            "   texCoords=vec2(pos.x-pos.z, pos.y-pos.w);\n"
-                            "   gl_Position = vec4(pos.x, pos.y, 0, 1.0);\n"
-                            "}\n"
-                            );
 
-//Gets the values from the texture.
-const std::string fragmentStr(
-#ifdef __APPLE__
-                              "#version 150\n"
-#else
-                              "#version 130\n"
-#endif
-                              "out vec4 outputColor;\n"
-                              "in vec2 texCoords;\n"
-                              "uniform float limit = 3.6e-5;\n"
-                              "void main(){\n"
-                              "float m = dot(texCoords, texCoords);\n"
-                              "if(m<limit){\n"
-                              "outputColor = vec4(0,0,1,1);\n"
-                              "}\n"
-                              "else outputColor = vec4(0,0,0,0);\n"
-                              "}\n"
-                              );
 bool shaderStatus(GLuint &shader);
 bool programStatus(GLuint &program);
 
 Display::Display(int nodes){
-    //two positions per 6 vertices for each node
-    positions = new float[4*6*nodes];
+    //N boxes with 6 sides, 2 triangles per side, 3 nodes per triangle, 3 position and 3 normal per node.
+    // N          *6       *2                    *3                   * (3              +3) =
+    positions = new float[6*2*3*(3+3)*nodes];
     N = nodes;
-
+    position_offset = 6*2*3*3;
 }
 
 
@@ -95,7 +64,14 @@ int Display::initialize(){
     /*
      * Create the program.
      */
-    const char* vertexCStr = vertexStr.c_str();
+    std::ifstream vertexFile("shaders/world.vert");
+    long start = vertexFile.tellg();
+    vertexFile.seekg(0, std::ios::end);
+    long end = vertexFile.tellg();
+    char* vertexCStr = new char[end-start];
+    vertexFile.seekg(0, std::ios::beg);
+    vertexFile.read(vertexCStr, end-start);
+    //const char* vertexCStr = vertexStr.c_str();
     GLuint vertexShader = glCreateShader( GL_VERTEX_SHADER );
     glShaderSource(vertexShader, 1, &vertexCStr, NULL);
     glCompileShader( vertexShader );
@@ -103,16 +79,28 @@ int Display::initialize(){
     if(!shaderStatus(vertexShader)){
         exit(1);
     }
+
+
     printf("made a window\n");
-    const char* fragmentCStr = fragmentStr.c_str();
+
+    std::ifstream fragFile;
+    fragFile.open("shaders/color.frag");
+    start = fragFile.tellg();
+    fragFile.seekg(0, std::ios::end);
+    end = fragFile.tellg();
+    char* fragCStr = new char[end-start];
+
+    fragFile.seekg(0, std::ios::beg);
+    fragFile.read(fragCStr, end-start);
     GLuint fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
-    glShaderSource(fragmentShader, 1, &fragmentCStr, NULL);
+    glShaderSource(fragmentShader, 1, &fragCStr, NULL);
     glCompileShader( fragmentShader );
-    
+
+
     if(!shaderStatus(fragmentShader)){
         exit(1);
     }
-    
+
     program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
@@ -121,7 +109,13 @@ int Display::initialize(){
     if(!programStatus(program)){
         exit(1);
     }
-    
+
+    delete[] vertexCStr;
+    vertexFile.close();
+    delete[] fragCStr;
+    fragFile.close();
+
+
     /*
      * Set up the buffers.
      */
@@ -134,12 +128,15 @@ int Display::initialize(){
     
     glGenBuffers(1, &positionBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*6*N,positions, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*72*N,positions, GL_STREAM_DRAW);
     
-    GLuint posIndex = glGetAttribLocation(program, "pos");
+    GLuint posIndex = glGetAttribLocation(program, "position");
+    GLuint normIndex = glGetAttribLocation(program, "normal");
     glEnableVertexAttribArray(posIndex);
-    glVertexAttribPointer(posIndex, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    
+    glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glEnableVertexAttribArray(normIndex);
+    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, position_offset, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
@@ -150,6 +147,8 @@ int Display::initialize(){
     //should be moved.
     writer = new TiffWriter("testing.tiff",height, width);
     pixbuf=new char[height*width*3];
+
+    camera = new Camera(program);
 
     return 0;
 }
@@ -201,33 +200,76 @@ void Display::shutdown(){
     glfwTerminate();
 }
 
-void Display::updateBall(int index, double x, double y, double radius){
-    float* node = &positions[24*index];
-    node[0] = x - radius;
-    node[1] = y - radius;
-    node[2] = x;
-    node[3] = y;
-    node[4] = x + radius;
-    node[5] = y - radius;
-    node[6] = x;
-    node[7] = y;
-    node[8] = x - radius;
-    node[9] = y + radius;
-    node[10] = x;
-    node[11] = y;
-    node[12] = x + radius;
-    node[13] = y - radius;
-    node[14] = x;
-    node[15] = y;
-    node[16] = x - radius;
-    node[17] = y + radius;
-    node[18] = x;
-    node[19] = y;
-    node[20] = x + radius;
-    node[21] = y + radius;
-    node[22] = x;
-    node[23] = y;
+const glm::dvec3 zaxis(0,0,1);
+const glm::dvec3 xaxis(1,0,0);
+
+void Display::updateRod(int index, Rod &rod){
+    int start = index*72;
+    //step one create the 3 axis for changes
+    glm::dvec3 main_axis(
+            rod.direction[0]*0.5*rod.length,
+            rod.direction[1]*0.5*rod.length,
+            rod.direction[2]*0.5*rod.length
+    );
+
+    glm::dvec3 first_axis = glm::cross(main_axis, zaxis);
+    if(glm::length(first_axis)==0){
+        first_axis = glm::cross(main_axis, xaxis);
+    }
+    first_axis = glm::normalize(first_axis);
+    first_axis[0] = first_axis[0]*0.5*rod.diameter;
+    first_axis[1] = first_axis[1]*0.5*rod.diameter;
+    first_axis[2] = first_axis[2]*0.5*rod.diameter;
+
+    glm::dvec3 second_axis = glm::cross(main_axis, first_axis);
+    second_axis = glm::normalize(second_axis);
+    second_axis[0] = second_axis[0]*0.5*rod.diameter;
+    second_axis[1] = second_axis[1]*0.5*rod.diameter;
+    second_axis[2] = second_axis[2]*0.5*rod.diameter;
+
+    glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
+    glm::dvec3 b = rod.position + main_axis + first_axis - second_axis;
+    glm::dvec3 c = rod.position + main_axis - first_axis - second_axis;
+    glm::dvec3 d = rod.position + main_axis - first_axis + second_axis;
+
+    updateFace(&positions[start], a, b, c, d);
+
 }
+
+void Display::updateFace(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &d){
+
+    updateTriangle(target, a, b, c);
+    updateTriangle(target + 36, b, d, c);
+
+}
+
+void Display::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c){
+    target[0] = a[0];
+    target[1] = a[1];
+    target[2] = a[2];
+    target[3] = b[0];
+    target[4] = b[1];
+    target[5] = b[2];
+    target[6] = c[0];
+    target[7] = c[1];
+    target[8] = c[2];
+
+
+    glm::dvec3 norm = glm::cross(b - a, c - a);
+
+    target[0 + position_offset] = norm[0];
+    target[1 + position_offset] = norm[1];
+    target[2 + position_offset] = norm[2];
+    target[3 + position_offset] = norm[0];
+    target[4 + position_offset] = norm[1];
+    target[5 + position_offset] = norm[2];
+    target[6 + position_offset] = norm[0];
+    target[7 + position_offset] = norm[1];
+    target[8 + position_offset] = norm[2];
+}
+
+
+
 
 /**
  * @brief shaderStatus
