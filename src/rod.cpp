@@ -1,6 +1,8 @@
 #include <memory>
 #include <math.h>
 #include "rod.h"
+//TODO
+const double REPEL = 1;
 
 double Line3D::distance(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point) {
     glm::dvec3 r = point - center;
@@ -29,6 +31,19 @@ double Line3D::distance(glm::dvec3 &center, glm::dvec3 &direction, double length
     }
 }
 
+double Line3D::closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point){
+    //find which zone point lies in.
+    glm::dvec3 r = point - center;
+    double proj = glm::dot(direction,r);
+    double half = length/2.0;
+    if(proj<-half){
+        return -half;
+    } else if(proj>half){
+        return half;
+    } else{
+        return proj;
+    }
+}
 
 bool checkAxis(double a_low, double a_high, double b_low, double b_high){
     return !(b_high<a_low || b_low>a_high);
@@ -396,4 +411,544 @@ void Rod::updateBounds(){
 
 Box3D& Rod::getBounds(){
     return bounds;
+}
+
+/**
+* Checks to other rod to see if there is a collision. If there is a collision then a force is applied to both
+* rods.
+*
+* @param other
+* return separation distance or -1 if bounding box does not cont
+*/
+
+double Rod::collide(Rod &other){
+    if(!bounds.intersects(other.bounds)){
+        return -1;
+    }
+    double minimum = 0.5*(other.diameter + diameter);
+    double separation = closestApproach(other);
+    if(separation<minimum){
+        //System.out.println("touching" + separation);
+        //touching!
+        glm::dvec2 sections = intersections(other);
+        glm::dvec3 a = getPoint(sections[0]);
+        glm::dvec3 b = other.getPoint(sections[1]);
+        glm::dvec3 ab = b - a;
+        double mag = glm::length(ab);
+        double interference = minimum - separation;
+        if(mag==0){
+            //TODO
+            printf("don't do this!");
+        } else{
+
+            double factor = interference*REPEL/mag;
+            applyForce(new glm::dvec4(
+                        -ab[0]*factor,
+                        -ab[1]*factor,
+                        -ab[2]*factor,
+                        sections[0])
+            );
+
+            other.applyForce(new glm::dvec4(
+                        ab[0]*factor,
+                        ab[1]*factor,
+                        ab[2]*factor,
+                        sections[1]));
+
+        }
+
+
+    }
+    return separation;
+
+}
+
+/**
+* Finds the positions of the closest approach for filaments that can be intersecting. returns the coordinates
+* as position along the length of the filament.
+*
+* @param other
+* @return
+*/
+glm::dvec2 Rod::intersections(Rod &other){
+    double dot = glm::dot(direction, other.direction);
+    double l_parallel = glm::abs(dot)*other.length;
+
+    //double[] parallel = new double[]{ dot*direction[0], dot*direction[1], dot*direction[2]};
+    glm::dvec3 r = other.position - position;
+    double z_parallel = glm::dot(direction, r);
+
+    double h = 0.5*length;
+
+    double o = z_parallel + l_parallel*0.5;
+    double p = z_parallel - l_parallel*0.5;
+
+    glm::dvec2 ret;
+    if(p>h){
+
+        //no stalk space, pure cap.
+        glm::dvec3 ps(position[0] + direction[0]*h, position[1] + direction[1]*h, position[2] + h*direction[2]);
+        ret = glm::dvec2(
+                h,
+                Line3D::closestApproachPosition(
+                    other.position,
+                    other.direction,
+                    other.length,
+                    ps
+                )
+        );
+
+    } else if(o>h && p>-h){
+
+        //top cap space and some stalk space.
+        double l_c = (o - h)*other.length/l_parallel;
+
+        double delta = other.length*0.5 - l_c*0.5;
+
+        delta = dot<0?-delta:delta;
+
+        glm::dvec3 new_center(
+            other.position[0] + other.direction[0]*delta,
+            other.position[1] + other.direction[1]*delta,
+            other.position[2] + other.direction[2]*delta
+        );
+        glm::dvec3 ps(position[0] + direction[0]*h, position[1] + direction[1]*h, position[2] + h*direction[2]);
+        double cap_distance = Line3D::distance(
+            new_center,
+            other.direction,
+            l_c,
+            ps
+        );
+
+        //next step... find region left in stalk.
+
+        //delta is in the opposite direction of the previous delta.
+        delta = dot<0?l_c/2:-l_c/2;
+
+        glm::dvec3 stalk_center(
+            other.position[0] + other.direction[0]*delta,
+            other.position[1] + other.direction[1]*delta,
+            other.position[2] + other.direction[2]*delta
+        );
+
+        glm::dvec3 r_stalk = stalk_center - position;
+
+        z_parallel = glm::dot(direction, r_stalk);
+
+        glm::dvec3 r_perp(
+            r_stalk[0] - z_parallel*direction[0],
+            r_stalk[1] - z_parallel*direction[1],
+            r_stalk[2] - z_parallel*direction[2]
+        );
+
+        glm::dvec3 t_perp(
+            other.direction[0] - dot*direction[0],
+            other.direction[1] - dot*direction[1],
+            other.direction[2] - dot*direction[2]
+        );
+
+        double m = glm::length(t_perp);
+        double stalk_length = other.length - l_c;
+        double l_perp = m*stalk_length;
+
+        double stalk_distance;
+
+        if(m == 0){
+            stalk_distance = glm::length(r_perp);
+        } else {
+            //normalize.
+            t_perp = glm::normalize(t_perp);
+            stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
+        }
+
+        if(stalk_distance<=cap_distance){
+            //if m==0 then use s_stalk is zero, because it can be anywhere along the stalk.
+            double s_stalk = 0;
+            if(m!=0) {
+                double stalk_perp = Line3D::closestApproachPosition(
+                    r_perp,
+                    t_perp,
+                    l_perp,
+                    Line3D::origin);
+
+                //scale the stalk perpendicular s to the actual stalk s .
+                s_stalk = stalk_perp / l_perp * stalk_length;
+            }
+
+            //displace to the other filament coordinate.
+            double other_s = s_stalk + delta;
+
+            double stalk_parallel = h - p;
+
+            //moves to the center of the stalk projection.
+            double my_s = (h + p)*0.5;
+            if(m!=0) {
+                if(dot<0){
+                    my_s -= s_stalk*stalk_parallel/stalk_length;
+                } else {
+                    my_s += s_stalk * stalk_parallel / stalk_length;
+                }
+            }
+            ret = glm::dvec2(my_s, other_s);
+
+        } else{
+            glm::dvec3 ps = getPoint(h);
+            ret = glm::dvec2(
+                h,
+                Line3D::closestApproachPosition(
+                    other.position,
+                    other.direction,
+                    other.length,
+                    ps
+                )
+            );
+
+        }
+
+    } else if(o>h && p<-h){
+    //All three regions are occupied.
+
+        //top cap length.
+        double l_top = (o-h)*other.length/l_parallel;
+
+        //bottom cap space.
+        double l_bottom = -(p + h)*other.length/l_parallel;
+
+        double l_stalk = other.length - l_top - l_bottom;
+
+        double top_delta = other.length*0.5 - l_top*0.5;
+        double bottom_delta = l_bottom*0.5 - other.length*0.5;
+        double stalk_delta = (l_bottom - l_top)*0.5;
+
+        //move in opposite directions if dot is negative.
+        top_delta = dot<0?-top_delta:top_delta;
+        bottom_delta = dot<0?-bottom_delta:bottom_delta;
+        stalk_delta = dot<0?-stalk_delta:stalk_delta;
+
+        glm::dvec3 top_center(
+            other.position[0] + other.direction[0]*top_delta,
+            other.position[1] + other.direction[1]*top_delta,
+            other.position[2] + other.direction[2]*top_delta
+        );
+
+
+        glm::dvec3 ps(position[0] + direction[0]*h, position[1] + direction[1]*h, position[2] + h*direction[2]);
+        double top_distance = Line3D::distance(
+            top_center,
+            other.direction,
+            l_top,
+            ps
+        );
+
+
+
+        //next step... find region left in stalk.
+
+        //delta is in the opposite direction of the cap region delta.
+
+        glm::dvec3 bottom_center(
+                other.position[0] + other.direction[0]*bottom_delta,
+                other.position[1] + other.direction[1]*bottom_delta,
+                other.position[2] + other.direction[2]*bottom_delta
+        );
+
+        glm::dvec3 bs(position[0] - direction[0]*h, position[1] - direction[1]*h, position[2] - h*direction[2]);
+        double bottom_distance = Line3D::distance(
+            bottom_center,
+            other.direction,
+            l_bottom,
+            bs
+        );
+
+        glm::dvec3 stalk_center(
+            other.position[0] + other.direction[0]*stalk_delta,
+            other.position[1] + other.direction[1]*stalk_delta,
+            other.position[2] + other.direction[2]*stalk_delta
+        );
+
+        glm::dvec3 r_stalk = stalk_center - position;
+
+        z_parallel = glm::dot(direction, r_stalk);
+
+        glm::dvec3 r_perp(
+            r_stalk[0] - z_parallel*direction[0],
+            r_stalk[1] - z_parallel*direction[1],
+            r_stalk[2] - z_parallel*direction[2]
+        );
+
+
+        glm::dvec3 t_perp(
+            other.direction[0] - dot*direction[0],
+            other.direction[1] - dot*direction[1],
+            other.direction[2] - dot*direction[2]
+        );
+
+        double m = glm::length(t_perp);
+        double stalk_distance;
+        double l_perp = m*(l_stalk);
+        if(m == 0){
+            stalk_distance = glm::length(r_perp);
+        } else {
+            //normalize.
+            t_perp[0] = t_perp[0] / m;
+            t_perp[1] = t_perp[1] / m;
+            t_perp[2] = t_perp[2] / m;
+
+            stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
+        }
+        double caps = top_distance<bottom_distance?top_distance:bottom_distance;
+        if(stalk_distance<=caps){
+
+            double s_stalk = 0;
+            //leave it zero if it is just a point in perpendicular space.
+            if(m!=0) {
+
+                //find the s of the line in perpendicular space
+                double stalk_perp = Line3D::closestApproachPosition(
+                    r_perp,
+                    t_perp,
+                    l_perp,
+                    Line3D::origin
+                );
+
+                //scale the stalk perpendicular to .
+                s_stalk = stalk_perp / l_perp * l_stalk;
+            }
+
+
+            double other_s = s_stalk + stalk_delta;
+            double stalk_parallel = 2*h;
+
+            double my_s = 0.0;
+            if(m!=0) {
+                if(dot>0) {
+                    my_s += s_stalk * stalk_parallel / l_stalk;
+                } else{
+                    my_s -= s_stalk * stalk_parallel / l_stalk;
+                }
+            }
+            return glm::dvec2(my_s, other_s);
+
+
+        }else if(top_distance<bottom_distance){
+            glm::dvec3 ps(position[0] + direction[0]*h, position[1] + direction[1]*h, position[2] + h*direction[2]);
+            return glm::dvec2(
+                h,
+                Line3D::closestApproachPosition(
+                    other.position,
+                    other.direction,
+                    other.length,
+                    ps
+                )
+            );
+
+        } else{
+            glm::dvec3 ps(position[0] - direction[0]*h, position[1] - direction[1]*h, position[2] - h*direction[2]);
+            return glm::dvec2(
+                -h,
+                Line3D::closestApproachPosition(
+                        other.position,
+                        other.direction,
+                        other.length,
+                        ps
+                )
+            );
+        }
+    } else if(o<=h && p>-h){
+            //only stalk region
+        glm::dvec3 r_perp(
+            r[0] - z_parallel*direction[0],
+            r[1] - z_parallel*direction[1],
+            r[2] - z_parallel*direction[2]
+        );
+        glm::dvec3 t_perp(
+            other.direction[0] - dot*direction[0],
+            other.direction[1] - dot*direction[1],
+            other.direction[2] - dot*direction[2]
+        );
+
+        double m = glm::length(t_perp);
+        double l_perp = m*other.length;
+
+
+        //if m==0 then use s_stalk is zero, because it can be anywhere along the stalk.
+        double s_stalk = 0;
+        if(m!=0) {
+            t_perp = glm::normalize(t_perp);
+
+            double stalk_perp = Line3D::closestApproachPosition(
+                r_perp,
+                t_perp,
+                l_perp,
+                Line3D::origin
+            );
+
+            //scale the stalk perpendicular s to the actual stalk s .
+            s_stalk = stalk_perp / l_perp * other.length;
+        }
+
+        //displace to the other filament coordinate.
+        double other_s = s_stalk;
+
+        double stalk_parallel = o - p;
+
+        //moves to the center of the stalk projection.
+        double my_s = (o + p)*0.5;
+        if(m!=0) {
+            if(dot>0) {
+                my_s += s_stalk * stalk_parallel / other.length;
+            } else{
+                my_s -= s_stalk * stalk_parallel/other.length;
+            }
+        }
+        ret = glm::dvec2(my_s, other_s);
+
+    } else if(o>-h){
+        //bottom cap and some stalk.
+        double l_c = -(p + h)*other.length/l_parallel;
+
+        double delta = other.length*0.5 - l_c*0.5;
+
+        //move in opposite direction as the first case.
+        delta = dot>0?-delta:delta;
+
+        glm::dvec3 new_center(
+            other.position[0] + other.direction[0]*delta,
+            other.position[1] + other.direction[1]*delta,
+            other.position[2] + other.direction[2]*delta
+        );
+        glm::dvec3 ps(position[0] - direction[0]*h, position[1] - direction[1]*h, position[2] - h*direction[2]);
+        double cap_distance = Line3D::distance(
+            new_center,
+            other.direction,
+            l_c,
+            ps
+        );
+
+
+
+        //next step... find region left in stalk.
+
+        //delta is in the opposite direction of the cap region delta.
+        delta = dot>0?l_c/2:-l_c/2;
+
+        glm::dvec3 stalk_center(
+            other.position[0] + other.direction[0]*delta,
+            other.position[1] + other.direction[1]*delta,
+            other.position[2] + other.direction[2]*delta
+        );
+
+        glm::dvec3 r_stalk = stalk_center - position;
+
+        z_parallel = glm::dot(direction, r_stalk);
+
+        glm::dvec3 r_perp(
+            r_stalk[0] - z_parallel*direction[0],
+            r_stalk[1] - z_parallel*direction[1],
+            r_stalk[2] - z_parallel*direction[2]
+        );
+
+
+        glm::dvec3 t_perp(
+            other.direction[0] - dot*direction[0],
+            other.direction[1] - dot*direction[1],
+            other.direction[2] - dot*direction[2]
+        );
+
+        double m = glm::length(t_perp);
+        double stalk_length = other.length - l_c;
+        double l_perp = m*stalk_length;
+        double stalk_distance;
+        if(m == 0){
+            stalk_distance = glm::length(r_perp);
+        } else {
+            //normalize.
+            t_perp[0] = t_perp[0] / m;
+            t_perp[1] = t_perp[1] / m;
+            t_perp[2] = t_perp[2] / m;
+
+            stalk_distance = Line3D::distance(r_perp, t_perp, l_perp, Line3D::origin);
+        }
+
+        if(stalk_distance<=cap_distance){
+            //if m==0 then use s_stalk is zero, because it can be anywhere along the stalk.
+            double s_stalk = 0;
+            if(m!=0) {
+                double stalk_perp = Line3D::closestApproachPosition(
+                    r_perp,
+                    t_perp,
+                    l_perp,
+                    Line3D::origin
+                );
+
+                //scale the stalk perpendicular s to the actual stalk s .
+                s_stalk = stalk_perp / l_perp * stalk_length;
+            }
+
+            //displace to the other filament coordinate.
+            double other_s = s_stalk + delta;
+
+            double stalk_parallel = o + h;
+
+            //moves to the center of the stalk projection.
+            double my_s = (-h + o)*0.5;
+            if(m!=0) {
+                if(dot<0){
+                    my_s += -s_stalk * stalk_parallel / stalk_length;
+                } else {
+                    my_s += s_stalk * stalk_parallel / stalk_length;
+                }
+            }
+            ret = glm::dvec2(my_s, other_s);
+        } else{
+            glm::dvec3 ps(position[0] - direction[0]*h, position[1] - direction[1]*h, position[2] - h*direction[2]);
+            ret = glm::dvec2(
+                -h,
+                Line3D::closestApproachPosition(
+                        other.position,
+                        other.direction,
+                        other.length,
+                        ps
+                )
+            );
+        }
+
+
+
+    } else{
+        ////no stalk space, pure cap.
+        glm::dvec3 ps(position[0] - direction[0]*h, position[1] - direction[1]*h, position[2] - h*direction[2]);
+        ret = glm::dvec2(
+            -h,
+            Line3D::closestApproachPosition(
+                other.position,
+                other.direction,
+                other.length,
+                ps
+            )
+        );
+    }
+
+    return ret;
+
+}
+
+glm::dvec3 Rod::getPoint(double s) {
+    return glm::dvec3(position[0] + direction[0]*s, position[1] + direction[1]*s, position[2] + direction[2]*s);
+}
+
+double Rod::prepareForces(){
+    std::lock_guard<std::mutex> lock(mutex);
+
+    for(int i = 0; i<forces.size(); i++){
+        glm::dvec4 f = *forces[i].get();
+        force[0] += f[0];
+        force[1] += f[1];
+        force[2] += f[2];
+        torque[0] += f[0];
+        torque[1] += f[1];
+        torque[2] += f[2];
+    }
+
+    return 0;
 }

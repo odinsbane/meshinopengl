@@ -21,6 +21,7 @@
 namespace Line3D{
     double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, const glm::dvec3 &point);
     const glm::dvec3 origin(0,0,0);
+    double closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point);
 
 }
 
@@ -44,7 +45,7 @@ class Rod{
         glm::dvec3 direction;
         glm::dvec3 position;
         std::mutex mutex;
-
+        glm::dvec3 force, torque;
         void applyForce(glm::dvec4* force);
         void clearForces();
         double closestApproach(Rod &other);

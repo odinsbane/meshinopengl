@@ -9,11 +9,12 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <random>
 #ifdef GLFW_DISPLAY
   #include "Display.h"
 #endif
 #include "rod.h"
-
+#include "FRandom.h"
 const double DT = 0.01;
 const double rebound = 1;
 std::vector<Rod*> rods;
@@ -25,6 +26,9 @@ void display();
 void initializeGraphics();
 int updateGraphics();
 Display* graphics;
+
+
+
 #endif
 int main(int argc, const char * argv[])
 {
@@ -45,7 +49,6 @@ int main(int argc, const char * argv[])
             step();
         }
         steps++;
-        if(steps==100) run = false;
 #ifdef GLFW_DISPLAY
         if(updateGraphics()!=0) run = false;
 #else
@@ -80,26 +83,48 @@ int updateGraphics(){
 }
 #endif
 
+
+
+FRandom* generator;
 void initialize(){
-    
-    double delta = 0.014;
-    for (int i = 0; i<21; i++){
-        for(int j = 0; j<21; j++){
-            Rod* rod = new Rod(0.1, 0.01);
-            rod->direction[1] = 1;
-            rod->position[0] = i*0.1 - 1;
-            rod->position[1] = j*0.1 - 1;
+    generator = new FRandom(1);
+    double delta = 0.2;
+    for (int i = 0; i<20; i++){
+        for(int j = 0; j<20; j++) {
+            Rod *rod = new Rod(1.6, 0.075);
+            rod->position[0] = delta*i - 1;
+            rod->position[1] = delta*j - 1;
+            glm::dvec3 dir = generator->randomDirection();
+
+            rod->direction[0] = dir[0];
+            rod->direction[1] = dir[1];
+            rod->direction[2] = dir[2];
+            rod->updateBounds();
             rods.push_back(rod);
-            
         }
     }
-
 
 }
 
 
 void step(){
+    int N = rods.size();
+    for(int i = 0; i<N; i++){
+        Rod *rod = rods[i];
+        for(int j = i+1; j<N; j++){
+            Rod *other = rods[j];
+            double d = rod->collide(*other);
+        }
+    }
 
+    for(int i = 0; i<N; i++){
+        Rod *rod = rods[i];
+        rod->prepareForces();
+        rod->update(DT);
+        rod->updateBounds();
+        rod->clearForces();
+
+    }
 }
 
 void display(){

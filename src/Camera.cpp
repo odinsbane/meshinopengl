@@ -22,9 +22,9 @@ Camera::Camera(GLuint &program){
 
     updatePosition();
     printf("initializing lights\n");
-    light_position = new float[3]{-0.5,-0.5,1.0};
+    light_position = new float[3]{-0.0,-0.0,1.0};
     light_intensity = new float[4]{0.9,0.9,0.9,1};
-    ambient_light = new float[4]{0.1, 0.1, 0.1, 1.0};
+    ambient_light = new float[4]{0.3, 0.3, 0.3, 1.0};
     GetError();
     updateLights();
     

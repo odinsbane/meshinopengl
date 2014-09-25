@@ -22,9 +22,11 @@
 #define __ParallelBalls__Display__
 
 #include <iostream>
+
 class Display{
 private:
     GLFWwindow* window;
+
     float* positions;
     int N;
     GLuint program;
@@ -38,17 +40,23 @@ private:
     int width = 400;
     int last = 2000;
     int position_offset;
+    bool writing=false;
     Camera* camera;
+    int running = 0;
+
 public:
     Display(int N);
     int initialize();
     void updateRod(int index, Rod &rod);
     int render();
     void shutdown();
+    void startWriter();
     ~Display(){
         delete[] pixbuf;
     }
-
+    void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
     void updateLights();
 };
+
+
 #endif /* defined(__ParallelBalls__Display__) */
