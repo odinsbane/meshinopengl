@@ -17,7 +17,8 @@
 #include <memory>
 #include <mutex>
 #include <glm/geometric.hpp> //glm::dot
-
+#define GLM_FORCE_RADIANS
+#include <glm/gtx/rotate_vector.hpp>
 namespace Line3D{
     double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, const glm::dvec3 &point);
     const glm::dvec3 origin(0,0,0);
@@ -32,7 +33,6 @@ public:
     bool contains(Box3D &other);
     bool intersects(Box3D &other);
 
-
 };
 class Rod{
     private:
@@ -41,6 +41,9 @@ class Rod{
 
     public:
         double length, diameter, stiffness, friction;
+        double alpha_longitudinal = 0.5;
+        double alpha_perpendicular = 1.0;
+        double alpha_rotational = 1.0;
         Rod( double l, double r );
         glm::dvec3 direction;
         glm::dvec3 position;

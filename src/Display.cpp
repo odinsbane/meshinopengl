@@ -9,17 +9,156 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
+#include <CoreGraphics/CoreGraphics.h>
 
 
 bool shaderStatus(GLuint &shader);
 bool programStatus(GLuint &program);
 
-//divisions.
-const int SIDES=6;
-const int TRIANGLES=2;
-const int NODES=3;
-const int POSITIONS=3;
-const int NORMALS=3;
+const glm::dvec3 zaxis(0,0,1);
+const glm::dvec3 xaxis(1,0,0);
+
+int RectangularPrism::getFloatCount(){
+    //N boxes with 6 sides, 2 triangles per side, 3 nodes per triangle, 3 position and 3 normal per node.
+    // N          *6       *2                    *3                   * (3              +3) =
+    return N*6*2*3*(3 + 3);
+}
+
+int RectangularPrism::getPositionOffset(){
+    return N*SIDES*TRIANGLES*NODES*POSITIONS;
+}
+
+void RectangularPrism::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c){
+    target[0] = static_cast<float>(a[0]);
+    target[1] = static_cast<float>(a[1]);
+    target[2] = static_cast<float>(a[2]);
+    target[3] = static_cast<float>(b[0]);
+    target[4] = static_cast<float>(b[1]);
+    target[5] = static_cast<float>(b[2]);
+    target[6] = static_cast<float>(c[0]);
+    target[7] = static_cast<float>(c[1]);
+    target[8] = static_cast<float>(c[2]);
+
+    int position_offset = getPositionOffset();
+
+    glm::dvec3 norm = glm::cross(b - a, c - a);
+    norm = glm::normalize(norm);
+    target[0 + position_offset] = static_cast<float>(norm[0]);
+    target[1 + position_offset] = static_cast<float>(norm[1]);
+    target[2 + position_offset] = static_cast<float>(norm[2]);
+    target[3 + position_offset] = static_cast<float>(norm[0]);
+    target[4 + position_offset] = static_cast<float>(norm[1]);
+    target[5 + position_offset] = static_cast<float>(norm[2]);
+    target[6 + position_offset] = static_cast<float>(norm[0]);
+    target[7 + position_offset] = static_cast<float>(norm[1]);
+    target[8 + position_offset] = static_cast<float>(norm[2]);
+
+}
+
+void RectangularPrism::updateFace(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &d){
+    int HALF = NODES*POSITIONS;
+    updateTriangle(target, a, b, c);
+    updateTriangle(&target[HALF], a, c, d);
+
+}
+
+int RectangularPrism::getElementNodeCount(){
+    return NODES*TRIANGLES*SIDES;
+}
+
+void RectangularPrism::updateRod(int index, Rod &rod){
+    int FACE = TRIANGLES*NODES*POSITIONS;
+
+    //index times the number of floats for a rod.
+    int start = index*SIDES*FACE;
+    //step one create the 3 axis for changes
+    glm::dvec3 main_axis(
+            rod.direction[0]*0.5*(rod.length + rod.diameter),
+            rod.direction[1]*0.5*(rod.length + rod.diameter),
+            rod.direction[2]*0.5*(rod.length + rod.diameter)
+    );
+
+    glm::dvec3 first_axis = glm::cross(main_axis, zaxis);
+    if(glm::length(first_axis)==0){
+        first_axis = glm::cross(main_axis, xaxis);
+    }
+    first_axis = glm::normalize(first_axis);
+    first_axis[0] = first_axis[0]*0.5*rod.diameter;
+    first_axis[1] = first_axis[1]*0.5*rod.diameter;
+    first_axis[2] = first_axis[2]*0.5*rod.diameter;
+
+    glm::dvec3 second_axis = glm::cross(main_axis, first_axis);
+    second_axis = glm::normalize(second_axis);
+    second_axis[0] = second_axis[0]*0.5*rod.diameter;
+    second_axis[1] = second_axis[1]*0.5*rod.diameter;
+    second_axis[2] = second_axis[2]*0.5*rod.diameter;
+    {
+        //front
+        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
+        glm::dvec3 b = rod.position + main_axis - first_axis + second_axis;
+        glm::dvec3 c = rod.position + main_axis - first_axis - second_axis;
+        glm::dvec3 d = rod.position + main_axis + first_axis - second_axis;
+
+        updateFace(&positions[start], a, b, c, d);
+    }
+
+    {
+        //back
+        glm::dvec3 a = rod.position - main_axis + first_axis + second_axis;
+        glm::dvec3 b = rod.position - main_axis + first_axis - second_axis;
+        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
+        glm::dvec3 d = rod.position - main_axis - first_axis + second_axis;
+
+        updateFace(&positions[start + FACE], a, b, c, d);
+    }
+
+    {
+        //right
+        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
+        glm::dvec3 b = rod.position + main_axis + first_axis - second_axis;
+        glm::dvec3 c = rod.position - main_axis + first_axis - second_axis;
+        glm::dvec3 d = rod.position - main_axis + first_axis + second_axis;
+
+        updateFace(&positions[start + 2*FACE], a, b, c, d);
+    }
+
+    {
+        //left
+        glm::dvec3 a = rod.position + main_axis - first_axis + second_axis;
+        glm::dvec3 b = rod.position - main_axis - first_axis + second_axis;
+        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
+        glm::dvec3 d = rod.position + main_axis - first_axis - second_axis;
+
+        updateFace(&positions[start + 3*FACE], a, b, c, d);
+    }
+
+    {
+        //top
+        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
+        glm::dvec3 b = rod.position - main_axis + first_axis + second_axis;
+        glm::dvec3 c = rod.position - main_axis - first_axis + second_axis;
+        glm::dvec3 d = rod.position + main_axis - first_axis + second_axis;
+
+        updateFace(&positions[start + 4*FACE], a, b, c, d);
+    }
+
+    {
+        //bottom
+        glm::dvec3 a = rod.position + main_axis + first_axis - second_axis;
+        glm::dvec3 b = rod.position + main_axis - first_axis - second_axis;
+        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
+        glm::dvec3 d = rod.position - main_axis + first_axis - second_axis;
+
+        updateFace(&positions[start + 5*FACE], a, b, c, d);
+    }
+
+    /*printf("box \n\n");
+    for(int i = 0; i<36; i++){
+        float* p = &positions[3*i];
+        float* n = &positions[3*i + position_offset];
+        printf("%1.1f, %1.1f, %1.1f, ... %1.1f, %1.1f, %1.1f \n", p[0], p[1], p[2], n[0], n[1], n[2]);
+    }*/
+}
 
 Display* main_display;
 void keyPressedStatic(GLFWwindow* window, int key, int scancode, int action, int mods){
@@ -27,11 +166,14 @@ void keyPressedStatic(GLFWwindow* window, int key, int scancode, int action, int
 };
 
 Display::Display(int rods){
-    //N boxes with 6 sides, 2 triangles per side, 3 nodes per triangle, 3 position and 3 normal per node.
-    // N          *6       *2                    *3                   * (3              +3) =
-    positions = new float[SIDES*TRIANGLES*NODES*(POSITIONS+NORMALS)*rods];
+    //repr = new RectangularPrism(rods);
+    repr = new MeshCylinder(rods, 16);
+    int floats = repr->getFloatCount();
+
+    positions = new float[floats];
+    repr->setPositions(positions);
+
     N = rods;
-    position_offset = N*SIDES*TRIANGLES*NODES*POSITIONS;
     main_display=this;
 }
 
@@ -155,7 +297,7 @@ int Display::initialize(){
     
     glGenBuffers(1, &positionBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*SIDES*TRIANGLES*NODES*(POSITIONS+NORMALS)*N,positions, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*repr->getFloatCount(),positions, GL_STREAM_DRAW);
     
     GLuint posIndex = glGetAttribLocation(program, "position");
     GLuint normIndex = glGetAttribLocation(program, "normal");
@@ -163,7 +305,7 @@ int Display::initialize(){
     glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(normIndex);
-    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(position_offset*sizeof(float)));
+    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(repr->getPositionOffset()*sizeof(float)));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
@@ -185,11 +327,14 @@ void Display::startWriter(){
     writing=true;
 }
 
+float myosin_color[] = {0,0,1,1};
+float actin_color[] = {0.5,1,0.5,1};
+
 int Display::render(){
         glUseProgram(program);
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-        int floats = SIDES*TRIANGLES*NODES*(POSITIONS+NORMALS)*N;
+        int floats = repr->getFloatCount();
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*floats,positions);
 
         /* Loop until the user closes the window */
@@ -203,8 +348,20 @@ int Display::render(){
         
         glBindVertexArray(vao);
         GetError();
-        glDrawArrays(GL_TRIANGLES, 0, SIDES*TRIANGLES*NODES*N);
-        
+        GLuint c = glGetUniformLocation(program, "color");
+
+        glUniform4fv(c, 1, actin_color);
+
+        int actin_nodes = Constants::ACTINS*repr->getElementNodeCount();
+        int myosin_nodes = Constants::MYOSINS*repr->getElementNodeCount();
+        if(actin_nodes>0) {
+            glDrawArrays(GL_TRIANGLES, 0, actin_nodes);
+        }
+        glUniform4fv(c, 1, myosin_color);
+
+        if(myosin_nodes>0) {
+            glDrawArrays(GL_TRIANGLES, actin_nodes, myosin_nodes);
+        }
         glBindVertexArray(0);
         glUseProgram(0);
 
@@ -234,134 +391,8 @@ void Display::shutdown(){
     glfwTerminate();
 }
 
-const glm::dvec3 zaxis(0,0,1);
-const glm::dvec3 xaxis(1,0,0);
-
 void Display::updateRod(int index, Rod &rod){
-    int FACE = TRIANGLES*NODES*POSITIONS;
-
-    //index times the number of floats for a rod.
-    int start = index*SIDES*FACE;
-    //step one create the 3 axis for changes
-    glm::dvec3 main_axis(
-            rod.direction[0]*0.5*rod.length,
-            rod.direction[1]*0.5*rod.length,
-            rod.direction[2]*0.5*rod.length
-    );
-
-    glm::dvec3 first_axis = glm::cross(main_axis, zaxis);
-    if(glm::length(first_axis)==0){
-        first_axis = glm::cross(main_axis, xaxis);
-    }
-    first_axis = glm::normalize(first_axis);
-    first_axis[0] = first_axis[0]*0.5*rod.diameter;
-    first_axis[1] = first_axis[1]*0.5*rod.diameter;
-    first_axis[2] = first_axis[2]*0.5*rod.diameter;
-
-    glm::dvec3 second_axis = glm::cross(main_axis, first_axis);
-    second_axis = glm::normalize(second_axis);
-    second_axis[0] = second_axis[0]*0.5*rod.diameter;
-    second_axis[1] = second_axis[1]*0.5*rod.diameter;
-    second_axis[2] = second_axis[2]*0.5*rod.diameter;
-    {
-        //front
-        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
-        glm::dvec3 b = rod.position + main_axis - first_axis + second_axis;
-        glm::dvec3 c = rod.position + main_axis - first_axis - second_axis;
-        glm::dvec3 d = rod.position + main_axis + first_axis - second_axis;
-
-        updateFace(&positions[start], a, b, c, d);
-    }
-
-    {
-        //back
-        glm::dvec3 a = rod.position - main_axis + first_axis + second_axis;
-        glm::dvec3 b = rod.position - main_axis + first_axis - second_axis;
-        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
-        glm::dvec3 d = rod.position - main_axis - first_axis + second_axis;
-
-        updateFace(&positions[start + FACE], a, b, c, d);
-    }
-
-    {
-        //right
-        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
-        glm::dvec3 b = rod.position + main_axis + first_axis - second_axis;
-        glm::dvec3 c = rod.position - main_axis + first_axis - second_axis;
-        glm::dvec3 d = rod.position - main_axis + first_axis + second_axis;
-
-        updateFace(&positions[start + 2*FACE], a, b, c, d);
-    }
-
-    {
-        //left
-        glm::dvec3 a = rod.position + main_axis - first_axis + second_axis;
-        glm::dvec3 b = rod.position - main_axis - first_axis + second_axis;
-        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
-        glm::dvec3 d = rod.position + main_axis - first_axis - second_axis;
-
-        updateFace(&positions[start + 3*FACE], a, b, c, d);
-    }
-
-    {
-        //top
-        glm::dvec3 a = rod.position + main_axis + first_axis + second_axis;
-        glm::dvec3 b = rod.position - main_axis + first_axis + second_axis;
-        glm::dvec3 c = rod.position - main_axis - first_axis + second_axis;
-        glm::dvec3 d = rod.position + main_axis - first_axis + second_axis;
-
-        updateFace(&positions[start + 4*FACE], a, b, c, d);
-    }
-
-    {
-        //bottom
-        glm::dvec3 a = rod.position + main_axis + first_axis - second_axis;
-        glm::dvec3 b = rod.position + main_axis - first_axis - second_axis;
-        glm::dvec3 c = rod.position - main_axis - first_axis - second_axis;
-        glm::dvec3 d = rod.position - main_axis + first_axis - second_axis;
-
-        updateFace(&positions[start + 5*FACE], a, b, c, d);
-    }
-
-    /*printf("box \n\n");
-    for(int i = 0; i<36; i++){
-        float* p = &positions[3*i];
-        float* n = &positions[3*i + position_offset];
-        printf("%1.1f, %1.1f, %1.1f, ... %1.1f, %1.1f, %1.1f \n", p[0], p[1], p[2], n[0], n[1], n[2]);
-    }*/
-}
-
-void Display::updateFace(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &d){
-    int HALF = NODES*POSITIONS;
-    updateTriangle(target, a, b, c);
-    updateTriangle(&target[HALF], a, c, d);
-
-}
-
-void Display::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c){
-    target[0] = static_cast<float>(a[0]);
-    target[1] = static_cast<float>(a[1]);
-    target[2] = static_cast<float>(a[2]);
-    target[3] = static_cast<float>(b[0]);
-    target[4] = static_cast<float>(b[1]);
-    target[5] = static_cast<float>(b[2]);
-    target[6] = static_cast<float>(c[0]);
-    target[7] = static_cast<float>(c[1]);
-    target[8] = static_cast<float>(c[2]);
-
-
-    glm::dvec3 norm = glm::cross(b - a, c - a);
-    norm = glm::normalize(norm);
-    target[0 + position_offset] = static_cast<float>(norm[0]);
-    target[1 + position_offset] = static_cast<float>(norm[1]);
-    target[2 + position_offset] = static_cast<float>(norm[2]);
-    target[3 + position_offset] = static_cast<float>(norm[0]);
-    target[4 + position_offset] = static_cast<float>(norm[1]);
-    target[5 + position_offset] = static_cast<float>(norm[2]);
-    target[6 + position_offset] = static_cast<float>(norm[0]);
-    target[7 + position_offset] = static_cast<float>(norm[1]);
-    target[8 + position_offset] = static_cast<float>(norm[2]);
-
+    repr->updateRod(index, rod);
 }
 
 void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){
@@ -446,3 +477,115 @@ bool programStatus(GLuint &program){
     }
     return true;
 }
+
+MeshCylinder::MeshCylinder(int rods, int divisions){
+    //        stalk points.         conical caps
+    floats = rods*divisions*2*3*6 + 2*rods*divisions*3*(3+3);
+    position_offset = floats/2;
+    element_node_count = divisions*2*3 + 2*divisions*3;
+    this->divisions = divisions;
+}
+
+int MeshCylinder::getFloatCount(){
+    return floats;
+}
+
+int MeshCylinder::getPositionOffset(){
+    return position_offset;
+}
+
+int MeshCylinder::getElementNodeCount() {
+    return element_node_count;
+}
+
+void MeshCylinder::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc){
+    target[0] = static_cast<float>(a[0]);
+    target[1] = static_cast<float>(a[1]);
+    target[2] = static_cast<float>(a[2]);
+    target[3] = static_cast<float>(b[0]);
+    target[4] = static_cast<float>(b[1]);
+    target[5] = static_cast<float>(b[2]);
+    target[6] = static_cast<float>(c[0]);
+    target[7] = static_cast<float>(c[1]);
+    target[8] = static_cast<float>(c[2]);
+
+    int position_offset = getPositionOffset();
+
+    target[0 + position_offset] = static_cast<float>(na[0]);
+    target[1 + position_offset] = static_cast<float>(na[1]);
+    target[2 + position_offset] = static_cast<float>(na[2]);
+    target[3 + position_offset] = static_cast<float>(nb[0]);
+    target[4 + position_offset] = static_cast<float>(nb[1]);
+    target[5 + position_offset] = static_cast<float>(nb[2]);
+    target[6 + position_offset] = static_cast<float>(nc[0]);
+    target[7 + position_offset] = static_cast<float>(nc[1]);
+    target[8 + position_offset] = static_cast<float>(nc[2]);
+
+}
+glm::dvec3 sum(double a, glm::dvec3 &va, double b, glm::dvec3 &vb){
+
+    return glm::dvec3(
+        a*va[0] + b*vb[0],
+        a*va[1] + b*vb[1],
+        a*va[2] + b*vb[2]
+    );
+
+
+}
+void MeshCylinder::updateRod(int index, Rod &rod) {
+
+
+    //index times the number of floats for a rod.
+    int start = index*element_node_count*3;
+    //step one create the 3 axis for changes
+    glm::dvec3 main_axis(
+            rod.direction[0]*0.5*(rod.length),
+            rod.direction[1]*0.5*(rod.length),
+            rod.direction[2]*0.5*(rod.length)
+    );
+
+    glm::dvec3 first_axis = glm::cross(main_axis, zaxis);
+    if(glm::length(first_axis)==0){
+        first_axis = glm::cross(main_axis, xaxis);
+    }
+    first_axis = glm::normalize(first_axis);
+
+    glm::dvec3 second_axis = glm::cross(main_axis, first_axis);
+    second_axis = glm::normalize(second_axis);
+
+    double dtheta = 2*3.14159/divisions;
+
+    double r = 0.5* rod.diameter;
+    int floats_per_face = 3*6 + 6*3;
+
+    glm::dvec3 tip = sum(0.5*rod.diameter + 0.5*rod.length, rod.direction, 1, rod.position);
+    glm::dvec3 tail = sum(-0.5*(rod.diameter + rod.length), rod.direction, 1, rod.position);
+    glm::dvec3 backwards(-rod.direction[0], -rod.direction[1], -rod.direction[2]);
+    for(int i = 0;i<divisions; i++){
+        double a1 = cos(dtheta*i);
+        double b1 = sin(dtheta*i);
+        double a2 = cos(dtheta*((i+1)%divisions));
+        double b2 = sin(dtheta*((i+1)%divisions));
+
+        glm::dvec3 n1 = sum(a1, first_axis, b1, second_axis);
+        glm::dvec3 n2 = sum(a2, first_axis, b2, second_axis);
+
+        glm::dvec3 a = sum(-1, main_axis, r, n1);
+        glm::dvec3 b = sum(-1, main_axis, r, n2);
+        glm::dvec3 c = sum(1, main_axis, r, n2);
+        glm::dvec3 d = sum(1, main_axis, r, n1);
+
+        a = sum(1, rod.position, 1, a);
+        b = sum(1, rod.position, 1, b);
+        c = sum(1, rod.position, 1, c);
+        d = sum(1, rod.position, 1, d);
+
+        updateTriangle(&positions[start + i*floats_per_face], a, b, d, n1, n2, n1);
+        updateTriangle(&positions[start + i*floats_per_face + 9], b, c, d, n2, n2, n1);
+
+        updateTriangle(&positions[start + i*floats_per_face + 18], d, c, tip, n1, n2, rod.direction);
+        updateTriangle(&positions[start + i*floats_per_face + 27], b, a, tail, n2, n1, backwards);
+    }
+
+}
+

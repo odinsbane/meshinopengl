@@ -81,9 +81,14 @@ void Rod::applyForce(glm::dvec4 *force) {
 }
 
 void Rod::clearForces(){
-
+    std::lock_guard<std::mutex> lock(mutex);
     forces.clear();
-
+    force[0] = 0;
+    force[1] = 0;
+    force[2] = 0;
+    torque[0] = 0;
+    torque[1] = 0;
+    torque[2] = 0;
 }
 
 double Rod::closestApproach(Rod &other){
@@ -945,10 +950,34 @@ double Rod::prepareForces(){
         force[0] += f[0];
         force[1] += f[1];
         force[2] += f[2];
-        torque[0] += f[0];
-        torque[1] += f[1];
-        torque[2] += f[2];
+        torque[0] += f[0]*f[3];
+        torque[1] += f[1]*f[3];
+        torque[2] += f[2]*f[3];
     }
 
     return 0;
+}
+
+double Rod::update(double dt){
+    double force_long = glm::dot(force, direction);
+
+    position[0] = position[0] + dt*(force_long*direction[0]/alpha_longitudinal + (force[0] - force_long*direction[0])/alpha_perpendicular);
+    position[1] = position[1] + dt*(force_long*direction[1]/alpha_longitudinal + (force[1] - force_long*direction[1])/alpha_perpendicular);
+    position[2] = position[2] + dt*(force_long*direction[2]/alpha_longitudinal + (force[2] - force_long*direction[2])/alpha_perpendicular);
+
+    double T = glm::length(torque);
+
+    if(T>0) {
+        double omega = T / alpha_rotational;
+        double theta = dt * omega;
+        torque[0] = torque[0] / T;
+        torque[1] = torque[1] / T;
+        torque[2] = torque[2] / T;
+
+        direction = glm::rotate(direction, theta, torque);
+    }
+
+
+    updateBounds();
+    return T;
 }

@@ -10,6 +10,9 @@
             FRandom(long seed){
                 engine.seed(seed);
             }
+            FRandom(){
+                engine.seed(std::random_device{}());
+            }
 
             double nextDouble(){
                 return engine()/max;

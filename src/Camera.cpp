@@ -11,7 +11,7 @@ Camera::Camera(GLuint &program){
     yy = new float[4];
     zz = new float[4];
 
-    r = 1;
+    r = 5;
     for(int i = 0; i<4; i++){
         quarternion[i] = 0.0;
         xx[i] = 0;
