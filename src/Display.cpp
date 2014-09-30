@@ -9,7 +9,6 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
-#include <CoreGraphics/CoreGraphics.h>
 
 
 bool shaderStatus(GLuint &shader);
@@ -195,8 +194,11 @@ int Display::initialize(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#else
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #endif
-    
+
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(400, 300, "Hello World", NULL, NULL);
     if (!window)
@@ -209,7 +211,8 @@ int Display::initialize(){
     glfwMakeContextCurrent(window);
     
 #ifndef __APPLE__
-        glewInit();
+    glewExperimental = GL_TRUE;
+    glewInit();
 #endif
 
     glEnable(GL_CULL_FACE);
@@ -241,7 +244,9 @@ int Display::initialize(){
     vertexFile.read(vertexCStr, end-start);
     //const char* vertexCStr = vertexStr.c_str();
     GLuint vertexShader = glCreateShader( GL_VERTEX_SHADER );
-    glShaderSource(vertexShader, 1, &vertexCStr, NULL);
+
+    const char* vcs(vertexCStr);
+    glShaderSource(vertexShader, 1, &vcs, NULL);
     glCompileShader( vertexShader );
     
     if(!shaderStatus(vertexShader)){
@@ -262,7 +267,10 @@ int Display::initialize(){
     fragFile.seekg(0, std::ios::beg);
     fragFile.read(fragCStr, end-start);
     GLuint fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
-    glShaderSource(fragmentShader, 1, &fragCStr, NULL);
+
+    //gcc's strange complaint.
+    const char* fcs(fragCStr);
+    glShaderSource(fragmentShader, 1, &fcs, NULL);
     glCompileShader( fragmentShader );
 
 

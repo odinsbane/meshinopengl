@@ -86,7 +86,8 @@ void Simulation::seedActinFilaments(){
 
 void Simulation::prepareRelaxSpace(){
     working_dt = Constants::DT;
-    position_record.push_back(std::unique_ptr<std::array<double>>(std::array<double>[6*actins.size() + 6*myosins.size()]));
+    std::vector<double> *ps = new std::vector<double>(6*actins.size() + 6*myosins.size());
+    position_record.push_back(std::unique_ptr<std::vector<double>>(ps));
 
 }
 void Simulation::seedMyosinMotors(){
@@ -120,19 +121,19 @@ void Simulation::prepareForces(){
 
 void Simulation::copyPositions(int index){
     int i = 0;
-    double* positions = position_record[index].get();
+    std::vector<double> *positions = position_record[index].get();
     for(Rod* & rod : actins){
         for(int j = 0; j<3; j++){
-            positions[i + j]= rod->position[j];
-            positions[i + j + 3] = rod->direction[j];
+            positions[0][i + j]= rod->position[j];
+            positions[0][i + j + 3] = rod->direction[j];
         }
         i+=6;
     }
 
     for(Rod* & rod : myosins){
         for(int j = 0; j<3; j++){
-            positions[i + j] = rod->position[j];
-            positions[i + j + 3] = rod->direction[j];
+            positions[0][i + j] = rod->position[j];
+            positions[0][i + j + 3] = rod->direction[j];
         }
         i+=6;
     }
@@ -161,19 +162,19 @@ void Simulation::restorePositions(int index){
 
 void Simulation::copyForces(int index){
     int i = 0;
-    double* forces = force_record[index].get();
+    std::vector<double> *forces = force_record[index].get();
     for(Rod* & rod : actins){
         for(int j = 0; j<3; j++){
-            forces[i + j]= rod->force[j];
-            forces[i + j + 3] = rod->torque[j];
+            forces[0][i + j]= rod->force[j];
+            forces[0][i + j + 3] = rod->torque[j];
         }
         i+=6;
     }
 
     for(Rod* & rod : myosins){
         for(int j = 0; j<3; j++){
-            forces[i + j] = rod->force[j];
-            forces[i + j + 3] = rod->torque[j];
+            forces[0][i + j] = rod->force[j];
+            forces[0][i + j + 3] = rod->torque[j];
         }
         i+=6;
     }
@@ -251,10 +252,46 @@ void Simulation::relax(){
     prepareForces();
     copyForces(1);
     clearForces();
-
+    //move back to y0
+    restorePositions(0);
     prepareForUpdate(2, {3.0/32.0, 9.0/32.0});
 
+    //y = y0 + 3/32k1 + 9/32k2
+    partialUpdate(working_dt);
+
+    //k3
+    prepareForces();
+    copyForces(2);
+    clearForces();
+    restorePositions(0);
+
+    prepareForUpdate(3, {1932.0/2197.0, -7200.0/2197.0, 7296.0/2197.0});
+    //y = y0 + 1932/2197 k1 - 7200/2197 k2 + 7296/2197 k3
+    partialUpdate(working_dt);
+
+    //k4
+    prepareForces();
+    copyForces(3);
+    clearForces();
+    restorePositions(0);
+
+    prepareForUpdate(4, {439.0/216.0, -8, 3680.0/513.0, -845.0/4104.0});
+    //y = y0 + 439/216 k1 - 8 k2 + 3680/513 k3 - 845/4104 k4
+    partialUpdate(working_dt);
+
+    //k5
+    prepareForces();
+    copyForces(4);
+    clearForces();
+    restorePositions(0);
+
+    prepareForUpdate(5, {-8.0/27.0, 2, -3544.0/2565.0, 1859.0/4104.0, -11.0/40.0});
+    //y =y0 -8/27 k1 + 2 k2 - 3544/2565 k3 + 1859/4104 k4 - 11/40 k5
+    partialUpdate(working_dt);
+
+
 }
+
 
 
 void Simulation::step(){

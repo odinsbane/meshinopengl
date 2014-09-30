@@ -68,7 +68,7 @@ class Simulation{
     void restorePositions(int index);
     void copyForces(int index);
     void clearForces();
-    void prepareForUpdate(int con_cout, const std::vector<double> coefficients);
+    void prepareForUpdate(int con_cout, const std::vector<double> &coefficients);
     void prepareRelaxSpace();
     void prepareForces();
     void relax();
