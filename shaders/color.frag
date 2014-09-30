@@ -7,8 +7,11 @@ out vec4 outputColor;
 
 smooth in vec4 meshColor;
 smooth in vec3 planePosition;
+
+uniform float transparency;
+
 void main() {
-    outputColor = meshColor;
+    outputColor = vec4(meshColor.xyz, transparency);
 }
 
 

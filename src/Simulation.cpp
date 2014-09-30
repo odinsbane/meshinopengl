@@ -84,6 +84,11 @@ void Simulation::seedActinFilaments(){
     }
 }
 
+void Simulation::prepareRelaxSpace(){
+    working_dt = Constants::DT;
+    position_record.push_back(std::unique_ptr<std::array<double>>(std::array<double>[6*actins.size() + 6*myosins.size()]));
+
+}
 void Simulation::seedMyosinMotors(){
 
 }
@@ -94,6 +99,163 @@ void Simulation::initialize(){
     seedMyosinMotors();
 
 }
+
+void Simulation::prepareForces(){
+    int N = actins.size();
+    for(int i = 0; i<N; i++){
+        Rod *rod = actins[i];
+        for(int j = i+1; j<N; j++){
+            Rod *other = actins[j];
+            double d = rod->collide(*other);
+        }
+    }
+
+    for(int i = 0; i<N; i++){
+        Rod *rod = actins[i];
+        rod->prepareForces();
+    }
+
+
+}
+
+void Simulation::copyPositions(int index){
+    int i = 0;
+    double* positions = position_record[index].get();
+    for(Rod* & rod : actins){
+        for(int j = 0; j<3; j++){
+            positions[i + j]= rod->position[j];
+            positions[i + j + 3] = rod->direction[j];
+        }
+        i+=6;
+    }
+
+    for(Rod* & rod : myosins){
+        for(int j = 0; j<3; j++){
+            positions[i + j] = rod->position[j];
+            positions[i + j + 3] = rod->direction[j];
+        }
+        i+=6;
+    }
+
+}
+
+void Simulation::restorePositions(int index){
+    int i = 0;
+    auto positions = position_record[index].get();
+    for(Rod* & rod : actins){
+        for(int j = 0; j<3; j++){
+            (*positions)[i + j]= rod->position[j];
+            (*positions)[i + j + 3] = rod->direction[j];
+        }
+        i+=6;
+    }
+
+    for(Rod* & rod : myosins){
+        for(int j = 0; j<3; j++){
+            (*positions)[i + j] = rod->position[j];
+            (*positions)[i + j + 3] = rod->direction[j];
+        }
+        i+=6;
+    }
+}
+
+void Simulation::copyForces(int index){
+    int i = 0;
+    double* forces = force_record[index].get();
+    for(Rod* & rod : actins){
+        for(int j = 0; j<3; j++){
+            forces[i + j]= rod->force[j];
+            forces[i + j + 3] = rod->torque[j];
+        }
+        i+=6;
+    }
+
+    for(Rod* & rod : myosins){
+        for(int j = 0; j<3; j++){
+            forces[i + j] = rod->force[j];
+            forces[i + j + 3] = rod->torque[j];
+        }
+        i+=6;
+    }
+}
+
+void Simulation::clearForces(){
+
+    for(Rod* & rod : actins){
+        rod->clearForces();
+    }
+
+    for(Rod* & rod : myosins){
+        rod->clearForces();
+    }
+}
+
+void Simulation::prepareForUpdate(int con_count, const std::vector<double> &coefficients) {
+    int i = 0;
+    for(Rod* & rod : actins){
+        for(int k = 0; k<con_count; k++){
+            std::vector<double> *forces = force_record[k].get();
+            for(int j = 0; j<3; j++) {
+                rod->force[j] += coefficients[k] * forces[0][i + j];
+                rod->torque[j] += coefficients[k] * forces[0][i + j + 3];
+            }
+        }
+        i+=6;
+    }
+
+    for(Rod* & rod : myosins){
+        for(int k = 0; k<con_count; k++){
+            std::vector<double> *forces = force_record[k].get();
+            for(int j = 0; j<3; j++) {
+                rod->force[j] += coefficients[k] * forces[0][i + j];
+                rod->torque[j] += coefficients[k] * forces[0][i + j + 3];
+            }
+        }
+
+        i+=6;
+    }
+}
+
+void Simulation::partialUpdate(double dt){
+    for(Rod* & rod : actins){
+        rod->update(dt);
+        rod->clearForces();
+    }
+
+    for(Rod* & rod : myosins){
+        rod->update(dt);
+        rod->clearForces();
+    }
+}
+/**
+* Using the Runge-Kutta-Fehlberg Method RKF45 an adaptive timestep technique
+*
+*/
+void Simulation::relax(){
+    //copy yk into position and direction record
+    copyPositions(0);
+
+    //create k1/h
+    prepareForces();
+    copyForces(0);
+    clearForces();
+
+    //set the forces to be 1/(4h) k1
+    double args[1]{0.25};
+    prepareForUpdate(1, {0.25});
+
+    //update the position to y0 + 1/4k1
+    partialUpdate(working_dt);
+
+    //prepare k2
+    prepareForces();
+    copyForces(1);
+    clearForces();
+
+    prepareForUpdate(2, {3.0/32.0, 9.0/32.0});
+
+}
+
 
 void Simulation::step(){
     int N = actins.size();

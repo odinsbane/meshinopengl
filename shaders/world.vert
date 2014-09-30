@@ -17,8 +17,13 @@ smooth out vec4 meshColor;
 smooth out vec3 planePosition;
 
 uniform vec4 color;
+
+uniform vec3 shift;
+
+
 void main() {
-        vec4 camPosition = orientationMatrix*(vec4(position+cam_offset,1));
+
+        vec4 camPosition = orientationMatrix*(vec4(position+cam_offset + shift,1));
         //dirToLight = vec3(0,0,1);
 
         gl_Position = perspectiveMatrix*camPosition;

@@ -16,12 +16,8 @@
 #endif
 
 #include "rod.h"
-#include "FRandom.h"
-const double DT = 0.1;
-const double rebound = 1;
+
 std::vector<Rod*> rods;
-void step();
-void display();
 
 #ifdef GLFW_DISPLAY
     void initializeGraphics();
@@ -37,7 +33,7 @@ int main(int argc, const char * argv[])
 
 #ifdef GLFW_DISPLAY
     std::vector<Rod*> &actins = sim.getActins();
-    printf("%d\n", actins.size());
+    printf("%ld\n", actins.size());
     for(int i = 0;i<Constants::ACTINS; i++){
         Rod* a = actins[i];
 
@@ -94,9 +90,3 @@ int updateGraphics(){
     return graphics->render();
 }
 #endif
-
-
-void display(){
-    Rod* rod = rods[0];
-    std::cout <<rod->position[0] << "\t" << rod->position[1] << "\n";
-}

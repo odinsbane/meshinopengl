@@ -3,3 +3,6 @@ build/
 .idea
 testing.tiff
 CMakeLists.txt
+running
+glfw
+glm

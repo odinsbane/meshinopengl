@@ -12,7 +12,7 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 1000;
+    const int ACTINS = 400;
     const int MYOSINS = 0;
 
     //simulation
@@ -56,20 +56,29 @@ namespace Constants {
 }
 
 class Simulation{
-    std::vector<double*> position_record;
-    std::vector<double*> torque_record;
-    std::vector<double*> force_record;
+    double working_dt;
+    std::vector<std::unique_ptr<std::vector<double>>> position_record;
+    std::vector<std::unique_ptr<std::vector<double>>> force_record;
     std::vector<Rod*> actins;
     std::vector<Rod*> myosins;
     FRandom* number_generator;
     void seedActinFilaments();
     void seedMyosinMotors();
+    void copyPositions(int index);
+    void restorePositions(int index);
+    void copyForces(int index);
+    void clearForces();
+    void prepareForUpdate(int con_cout, const std::vector<double> coefficients);
+    void prepareRelaxSpace();
+    void prepareForces();
+    void relax();
+    void partialUpdate(double dt);
     public:
         Simulation(){ number_generator = new FRandom();}
         void initialize();
         void step();
         std::vector<Rod*> &getActins();
-
+        std::vector<Rod*> &getMyosins();
 
 };
 

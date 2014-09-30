@@ -348,19 +348,37 @@ int Display::render(){
         
         glBindVertexArray(vao);
         GetError();
-        GLuint c = glGetUniformLocation(program, "color");
 
-        glUniform4fv(c, 1, actin_color);
+        GLuint shift_loc = glGetUniformLocation(program, "shift");
+        GLuint color_loc = glGetUniformLocation(program, "color");
+        GLuint trans_loc = glGetUniformLocation(program, "transparency");
+        float* shift = new float[3];
+        shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
+        for(int i=0; i<3; i++) {
+            for(int j=0; j<3; j++) {
+                shift[0] = (i-1)*Constants::WIDTH;
+                shift[1] = (j-1)*Constants::WIDTH;
+                glUniform3fv(shift_loc, 1, shift);
 
-        int actin_nodes = Constants::ACTINS*repr->getElementNodeCount();
-        int myosin_nodes = Constants::MYOSINS*repr->getElementNodeCount();
-        if(actin_nodes>0) {
-            glDrawArrays(GL_TRIANGLES, 0, actin_nodes);
-        }
-        glUniform4fv(c, 1, myosin_color);
+                if(i==1 && j==1){
+                    glUniform1f(trans_loc, 1.0);
+                } else{
+                    glUniform1f(trans_loc, 0.25);
+                 }
 
-        if(myosin_nodes>0) {
-            glDrawArrays(GL_TRIANGLES, actin_nodes, myosin_nodes);
+                glUniform4fv(color_loc, 1, actin_color);
+
+                int actin_nodes = Constants::ACTINS * repr->getElementNodeCount();
+                int myosin_nodes = Constants::MYOSINS * repr->getElementNodeCount();
+                if (actin_nodes > 0) {
+                    glDrawArrays(GL_TRIANGLES, 0, actin_nodes);
+                }
+                glUniform4fv(color_loc, 1, myosin_color);
+
+                if (myosin_nodes > 0) {
+                    glDrawArrays(GL_TRIANGLES, actin_nodes, myosin_nodes);
+                }
+            }
         }
         glBindVertexArray(0);
         glUseProgram(0);
