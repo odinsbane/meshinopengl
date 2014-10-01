@@ -12,11 +12,11 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 400;
+    const int ACTINS = 4000;
     const int MYOSINS = 0;
 
     //simulation
-    const double DT = 1e-1;
+    const double DT = 1e-5;
     const double WIDTH = 6.4;
     const double SEED_WIDTH=6.4;
     const double THICKNESS = 0.56;
@@ -24,7 +24,7 @@ namespace Constants {
     const double STEPS_PER_FRAME=1000;
     const double SUB_STEPS=10000;
     const double RELAXATION_LIMIT = 5e-1;
-    const double ERROR_THRESHOLD = 1e-12;
+    const double ERROR_THRESHOLD = 1e-4;
     const double REPULSION=1;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 1; //constant force
@@ -59,26 +59,29 @@ class Simulation{
     double working_dt;
     std::vector<std::unique_ptr<std::vector<double>>> position_record;
     std::vector<std::unique_ptr<std::vector<double>>> force_record;
-    std::vector<Rod*> actins;
-    std::vector<Rod*> myosins;
+    std::vector<ActinFilament*> actins;
+    std::vector<MyosinMotor*> myosins;
     FRandom* number_generator;
     void seedActinFilaments();
     void seedMyosinMotors();
-    void copyPositions(int index);
     void restorePositions(int index);
-    void copyForces(int index);
     void clearForces();
+    void copyForces(int index);
+    void copyPositions(int index);
+    ActinFilament* createNewFilament();
+    MyosinMotor* createNewMotor();
     void prepareForUpdate(int con_cout, const std::vector<double> &coefficients);
     void prepareRelaxSpace();
     void prepareForces();
     void relax();
     void partialUpdate(double dt);
+    double calculateError();
     public:
         Simulation(){ number_generator = new FRandom();}
         void initialize();
         void step();
-        std::vector<Rod*> &getActins();
-        std::vector<Rod*> &getMyosins();
+        std::vector<ActinFilament*> &getActins();
+        std::vector<MyosinMotor*> &getMyosins();
 
 };
 

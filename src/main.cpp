@@ -32,15 +32,19 @@ int main(int argc, const char * argv[])
     sim.initialize();
 
 #ifdef GLFW_DISPLAY
-    std::vector<Rod*> &actins = sim.getActins();
-    printf("%ld\n", actins.size());
+    std::vector<ActinFilament*> &actins = sim.getActins();
     for(int i = 0;i<Constants::ACTINS; i++){
         Rod* a = actins[i];
-
-        rods.push_back(actins[i]);
-
+        rods.push_back(a);
     }
-    printf("%d\n", rods.size());
+
+    std::vector<MyosinMotor*> &myosins = sim.getMyosins();
+    for(int i = 0; i<Constants::MYOSINS; i++){
+        Rod* a = myosins[i];
+        rods.push_back(a);
+    }
+
+    printf("Rods loaded: %ld\n", rods.size());
     initializeGraphics();
 #endif
     

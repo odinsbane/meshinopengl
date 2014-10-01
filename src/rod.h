@@ -40,6 +40,7 @@ class Rod{
         Box3D bounds;
 
     public:
+        Rod(){}
         double length, diameter, stiffness, friction;
         double alpha_longitudinal = 0.5;
         double alpha_perpendicular = 1.0;
@@ -63,6 +64,16 @@ class Rod{
         Box3D& getBounds();
 
 
+};
+class ActinFilament : public Rod{
+public:
+    ActinFilament(double l, double r) : Rod(l,r){}
+
+};
+class MyosinMotor : public Rod{
+    public:
+        double F0, alpha_s, K_m, tau_B;
+        MyosinMotor(double l, double r) : Rod(l,r){}
 };
 
 
