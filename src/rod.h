@@ -23,7 +23,7 @@ namespace Line3D{
     double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, const glm::dvec3 &point);
     const glm::dvec3 origin(0,0,0);
     double closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point);
-
+    std::vector<double> sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 point, double radius);
 }
 
 class Box3D{
@@ -54,8 +54,8 @@ class Rod{
         void clearForces();
         double closestApproach(Rod &other);
         glm::dvec2 intersections(Rod &other);
-        double closestApproach(glm::vec3  &point);
-        glm::dvec2 getIntersections(glm::dvec3 &point, double radius);
+        double closestApproach(glm::dvec3  &point);
+        std::vector<double> getIntersections(glm::dvec3 &point, double radius);
         glm::dvec3 getPoint(double s);
         double collide(Rod &other);
         double prepareForces();

@@ -45,6 +45,35 @@ double Line3D::closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction
     }
 }
 
+std::vector<double> Line3D::sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 point, double radius){
+    //find which zone point lies in.
+    std::vector<double> points;
+    glm::dvec3 r = point - center;
+    double proj = glm::dot(direction,r);
+    double half = length/2.0;
+
+    glm::dvec3 r_perp( r[0] - proj*direction[0], r[1] - proj*direction[1], r[2] - proj*direction[2]);
+    double perp = glm::length(r_perp);
+    if(perp>radius){
+        return points;
+    }
+    double captured = sqrt(radius*radius - perp*perp);
+
+    double forward = proj + captured;
+    double backward = proj - captured;
+
+    if(forward>=-half && forward<=half){
+        points.push_back(forward);
+    }
+
+    if(backward>=-half && backward<=half){
+        points.push_back(backward);
+    }
+
+    return points;
+}
+
+
 bool checkAxis(double a_low, double a_high, double b_low, double b_high){
     return !(b_high<a_low || b_low>a_high);
 }
@@ -70,8 +99,8 @@ bool Box3D::intersects(Box3D &other){
 };
 
 
-Rod::Rod(double l, double r){
-    diameter = r*2;
+Rod::Rod(double l, double d){
+    diameter = d;
     length = l;
 }
 
@@ -380,7 +409,9 @@ double Rod::closestApproach(Rod &other){
                         }
 }
 
-
+double Rod::closestApproach(glm::dvec3 &point) {
+    return Line3D::distance(position, direction, length, point);
+}
 
 void Rod::updateBounds(){
     double x1 = position[0] - length*0.5*direction[0];
@@ -938,6 +969,11 @@ glm::dvec2 Rod::intersections(Rod &other){
 
 }
 
+glm::dvec2 getIntersections(glm::dvec3 &point, double radius){
+
+}
+
+
 glm::dvec3 Rod::getPoint(double s) {
     return glm::dvec3(position[0] + direction[0]*s, position[1] + direction[1]*s, position[2] + direction[2]*s);
 }
@@ -955,7 +991,7 @@ double Rod::prepareForces(){
         torque[2] += f[2]*f[3];
     }
 
-    return 0;
+    return glm::length(force) + glm::length(torque);
 }
 
 double Rod::update(double dt){
@@ -980,4 +1016,8 @@ double Rod::update(double dt){
 
     updateBounds();
     return T;
+}
+
+std::vector<double> Rod::getIntersections(glm::dvec3 &point, double radius) {
+    return Line3D::sphereBounds(position, direction, length, point, radius);
 }

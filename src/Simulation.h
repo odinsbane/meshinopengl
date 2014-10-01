@@ -12,8 +12,8 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 4000;
-    const int MYOSINS = 0;
+    const int ACTINS = 100;
+    const int MYOSINS = 20;
 
     //simulation
     const double DT = 1e-5;
@@ -23,8 +23,8 @@ namespace Constants {
     const double STEPS_PER_SIMULATE=250;
     const double STEPS_PER_FRAME=1000;
     const double SUB_STEPS=10000;
-    const double RELAXATION_LIMIT = 5e-1;
-    const double ERROR_THRESHOLD = 1e-4;
+    const double RELAXATION_LIMIT = 5;
+    const double ERROR_THRESHOLD = 1e-3;
     const double REPULSION=1;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 1; //constant force
@@ -72,10 +72,11 @@ class Simulation{
     MyosinMotor* createNewMotor();
     void prepareForUpdate(int con_cout, const std::vector<double> &coefficients);
     void prepareRelaxSpace();
-    void prepareForces();
+    double prepareForces();
     void relax();
     void partialUpdate(double dt);
     double calculateError();
+    glm::dvec3 getReflectedPoint(glm::dvec3 a, glm::dvec3 b);
     public:
         Simulation(){ number_generator = new FRandom();}
         void initialize();

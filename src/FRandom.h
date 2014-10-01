@@ -26,7 +26,9 @@
                 }
                 return glm::normalize(v);
             }
-
+            int nextInt(int range){
+                return int(nextDouble()*range);
+            }
     };
 
 #endif

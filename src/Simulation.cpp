@@ -110,9 +110,82 @@ void Simulation::prepareRelaxSpace(){
         force_record.push_back(std::unique_ptr<std::vector<double>>(ps));
     }
 }
+
+glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 a, glm::dvec3 b) {
+    return a;
+}
 void Simulation::seedMyosinMotors(){
     for(int i = 0; i<Constants::MYOSINS; i++){
+        MyosinMotor* motor = createNewMotor();
 
+        //MyosinMotorBinding bind = new MyosinMotorBinding(this, motor);
+        ActinFilament* host = actins[number_generator->nextInt(actins.size())];
+
+        double s = (number_generator->nextDouble() - 0.5) * host->length;
+        glm::dvec3 host_a = host->getPoint(s);
+
+        //bind.bind(host, MyosinMotor.FRONT, s);
+
+        std::vector<ActinFilament*> possibles;
+        for (ActinFilament* target : actins) {
+            if (host == target) continue;
+            double separation = target->closestApproach(host_a);
+            if (separation < motor->length) {
+                glm::dvec3 reflected = getReflectedPoint(target->position, host_a);
+                std::vector<double> intersections = target->getIntersections(reflected, motor->length + 2*Constants::MYOSIN_BIND_LENGTH);
+                if (intersections.size() == 0) {
+                    //The attached head of the motor is too close to the center of the target filament.
+                    continue;
+                }
+                possibles.push_back(target);
+            }
+        }
+        glm::dvec3 host_b;
+        if (possibles.size() > 0) {
+
+            ActinFilament* other = possibles[number_generator->nextInt(possibles.size())];
+            glm::dvec3 reflected = getReflectedPoint(other->position, host_a);
+            std::vector<double> intersections = other->getIntersections(reflected, motor->length + 2*Constants::MYOSIN_BIND_LENGTH);
+
+            double s2 = intersections[number_generator->nextInt(intersections.size())];
+            glm::dvec3 target_p = other->getPoint(s2);
+            host_b = getReflectedPoint(host_a, target_p);
+            //bind.bind(other, MyosinMotor.BACK, s2);
+        } else {
+            do {
+               double phi = PI * number_generator->nextDouble();
+                double theta = 2 * PI * number_generator->nextDouble();
+                //TODO remove
+                double l = motor->length + motor->diameter + host->diameter;
+                host_b = glm::dvec3(
+                        host_a[0] + l * cos(theta) * sin(phi),
+                        host_a[1] + l * sin(theta) * sin(phi),
+                        host_a[2] + l * cos(phi)
+                );
+                printf("myosin head could not find a filament to attach to.\n");
+            } while (host_b[2] > Constants::MEMBRANE_POSITION);
+
+        }
+
+
+        //bindings.add(bind);
+
+
+        motor->position = glm::dvec3(
+                (host_a[0] + host_b[0]) * 0.5,
+                (host_a[1] + host_b[1]) * 0.5,
+                (host_a[2] + host_b[2]) * 0.5
+        );
+
+
+        glm::dvec3 dir = host_a - host_b;
+
+        motor->direction = glm::normalize(dir);
+
+        motor->updateBounds();
+
+        myosins.push_back(motor);
+        //relaxRod(motor);
     }
 }
 
@@ -123,22 +196,42 @@ void Simulation::initialize(){
 
 }
 
-void Simulation::prepareForces(){
+double Simulation::prepareForces(){
     int N = actins.size();
+
     for(int i = 0; i<N; i++){
         Rod *rod = actins[i];
         for(int j = i+1; j<N; j++){
             Rod *other = actins[j];
-            double d = rod->collide(*other);
+            rod->collide(*other);
+        }
+
+        for(int j = 0; j<Constants::MYOSINS; j++){
+            Rod *other = myosins[j];
+            rod->collide(*other);
         }
     }
 
-    for(int i = 0; i<N; i++){
-        Rod *rod = actins[i];
-        rod->prepareForces();
+    for(int i = 0; i<Constants::MYOSINS; i++){
+        Rod *rod = myosins[i];
+        for(int j = i+1; j<Constants::MYOSINS; j++){
+            Rod *other = myosins[j];
+            rod->collide(*other);
+        }
     }
 
+    double sum = 0;
+    for(int i = 0; i<N; i++){
+        Rod *rod = actins[i];
+        sum += rod->prepareForces();
+    }
 
+    for(int i = 0; i<Constants::MYOSINS; i++){
+        Rod *rod = myosins[i];
+        sum += rod->prepareForces();
+    }
+
+    return sum;
 }
 
 void Simulation::copyPositions(int index){
@@ -298,13 +391,13 @@ void Simulation::relax(){
     bool relaxed = false;
 
     while(!relaxed) {
-        double err;
+        double err, out_of_eq;
         do {
             //copy yk into position and direction record
             copyPositions(0);
 
             //create k1/h
-            prepareForces();
+            out_of_eq = prepareForces();
             copyForces(0);
             clearForces();
 
@@ -383,9 +476,10 @@ void Simulation::relax(){
             double new_dt = pow(v, 0.25)*working_dt;
 
             working_dt = new_dt>2*working_dt?2*working_dt:new_dt;
-
+            working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
         } while (err>Constants::ERROR_THRESHOLD);
-        relaxed = true;
+        printf("%e %e\n", out_of_eq, working_dt);
+        relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
     }
 }
 
