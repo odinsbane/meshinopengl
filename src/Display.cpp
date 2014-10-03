@@ -406,7 +406,11 @@ int Display::render(){
 
         }
 
+        if(snapshot){
 
+            takeSnapShot();
+
+        }
         return running;
     
 
@@ -420,6 +424,27 @@ void Display::shutdown(){
 void Display::updateRod(int index, Rod &rod){
     repr->updateRod(index, rod);
 }
+
+
+void Display::takeSnapShot(){
+    char* buf = new char[3*width*height];
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buf);
+
+    char* str_buf = new char[100];
+    auto start = std::chrono::system_clock::now();
+
+    sprintf(str_buf, "snapshot-%ld.tif", std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count());
+
+    TiffWriter writes(str_buf, height, width);
+    writes.writeFrame(buf);
+    writes.close();
+
+    delete[] str_buf;
+    delete buf;
+    snapshot=false;
+
+}
+
 
 void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){
 
@@ -445,6 +470,9 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
                 break;
             case GLFW_KEY_ESCAPE:
                 running=-1;
+                break;
+            case GLFW_KEY_SPACE:
+                snapshot=true;
                 break;
         }
     }

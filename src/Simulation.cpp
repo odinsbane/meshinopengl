@@ -193,7 +193,14 @@ void Simulation::initialize(){
     prepareRelaxSpace();
     seedActinFilaments();
     seedMyosinMotors();
-
+    /*ActinFilament* a = createNewFilament();
+    a->direction[0] = 1;
+    actins.push_back(a);
+    ActinFilament* b = createNewFilament();
+    b->direction[1] = 1;
+    b->position[1] = 0.5*a->length + 0.25*a->diameter;
+    actins.push_back(b);
+    */
 }
 
 double Simulation::prepareForces(){
@@ -246,7 +253,7 @@ void Simulation::copyPositions(int index){
         i+=6;
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         for(int j = 0; j<3; j++){
             positions[0][i + j] = rod->position[j];
             positions[0][i + j + 3] = rod->direction[j];
@@ -259,19 +266,21 @@ void Simulation::copyPositions(int index){
 void Simulation::restorePositions(int index){
     int i = 0;
     auto positions = position_record[index].get();
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         for(int j = 0; j<3; j++){
-            (*positions)[i + j]= rod->position[j];
-            (*positions)[i + j + 3] = rod->direction[j];
+            rod->position[j] = (*positions)[i + j];
+            rod->direction[j] = (*positions)[i + j + 3];
         }
+        rod->updateBounds();
         i+=6;
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         for(int j = 0; j<3; j++){
-            (*positions)[i + j] = rod->position[j];
-            (*positions)[i + j + 3] = rod->direction[j];
+            rod->position[j] = (*positions)[i + j];
+            rod->direction[j] = (*positions)[i + j + 3];
         }
+        rod->updateBounds();
         i+=6;
     }
 }
@@ -279,7 +288,7 @@ void Simulation::restorePositions(int index){
 void Simulation::copyForces(int index){
     int i = 0;
     std::vector<double> *forces = force_record[index].get();
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         for(int j = 0; j<3; j++){
             forces[0][i + j]= rod->force[j];
             forces[0][i + j + 3] = rod->torque[j];
@@ -287,7 +296,7 @@ void Simulation::copyForces(int index){
         i+=6;
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         for(int j = 0; j<3; j++){
             forces[0][i + j] = rod->force[j];
             forces[0][i + j + 3] = rod->torque[j];
@@ -298,18 +307,18 @@ void Simulation::copyForces(int index){
 
 void Simulation::clearForces(){
 
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         rod->clearForces();
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         rod->clearForces();
     }
 }
 
 void Simulation::prepareForUpdate(int con_count, const std::vector<double> &coefficients) {
     int i = 0;
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
 
         for(int k = 0; k<con_count; k++){
 
@@ -325,7 +334,7 @@ void Simulation::prepareForUpdate(int con_count, const std::vector<double> &coef
         i+=6;
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         for(int k = 0; k<con_count; k++){
             double kn = coefficients[k];
             if(kn==0){continue;}
@@ -341,14 +350,16 @@ void Simulation::prepareForUpdate(int con_count, const std::vector<double> &coef
 }
 
 void Simulation::partialUpdate(double dt){
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         rod->update(dt);
         rod->clearForces();
+        rod->updateBounds();
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         rod->update(dt);
         rod->clearForces();
+        rod->updateBounds();
     }
 }
 
@@ -361,7 +372,7 @@ double Simulation::calculateError(){
 
     auto positions = position_record[1].get();
     double v;
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         for(int j = 0; j<3; j++){
             v = (*positions)[i + j] - rod->position[j];
             sum += v*v;
@@ -371,7 +382,7 @@ double Simulation::calculateError(){
         i+=6;
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         for(int j = 0; j<3; j++){
             v = (*positions)[i + j] - rod->position[j];
             sum += v*v;
@@ -390,81 +401,132 @@ double Simulation::calculateError(){
 void Simulation::relax(){
     bool relaxed = false;
 
+    ActinFilament* a = actins[0];
+    ActinFilament* b = actins[1];
     while(!relaxed) {
         double err, out_of_eq;
         do {
             //copy yk into position and direction record
             copyPositions(0);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //create k1/h
             out_of_eq = prepareForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             copyForces(0);
             clearForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //set the forces to be 1/(4h) k1
-            double args[1]{0.25};
             prepareForUpdate(1, {0.25});
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //update the position to y0 + 1/4k1
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //prepare k2
             prepareForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             copyForces(1);
             clearForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             //move back to y0
             restorePositions(0);
             prepareForUpdate(2, {3.0 / 32.0, 9.0 / 32.0});
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //y = y0 + 3/32k1 + 9/32k2
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //k3
             prepareForces();
             copyForces(2);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
             clearForces();
             restorePositions(0);
 
             prepareForUpdate(3, {1932.0 / 2197.0, -7200.0 / 2197.0, 7296.0 / 2197.0});
             //y = y0 + 1932/2197 k1 - 7200/2197 k2 + 7296/2197 k3
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //k4
             prepareForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
             copyForces(3);
             clearForces();
             restorePositions(0);
 
             prepareForUpdate(4, {439.0 / 216.0, -8, 3680.0 / 513.0, -845.0 / 4104.0});
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             //y = y0 + 439/216 k1 - 8 k2 + 3680/513 k3 - 845/4104 k4
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //k5
             prepareForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             copyForces(4);
             clearForces();
             restorePositions(0);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             prepareForUpdate(5, {-8.0 / 27.0, 2, -3544.0 / 2565.0, 1859.0 / 4104.0, -11.0 / 40.0});
             //y =y0 -8/27 k1 + 2 k2 - 3544/2565 k3 + 1859/4104 k4 - 11/40 k5
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //k6 prepareForces();
             prepareForces();
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             copyForces(5);
             clearForces();
             restorePositions(0);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             prepareForUpdate(5, {25.0 / 216.0, 0, 1408.0 / 2565.0, 2197.0 / 4101.0, -0.2});
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
 
             //store y_(k+1) in the 2nd position.
             copyPositions(1);
             clearForces();
             restorePositions(0);
 
+
             prepareForUpdate(6, {16.0 / 135.0, 0, 6656.0 / 12825.0, 28561.0 / 56430.0, -9.0 / 50.0, 2.0 / 55.0});
             partialUpdate(working_dt);
+            //printf("a: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", a->position[0], a->position[1], a->position[2], a->force[0], a->force[1], a->force[2]);
+            //printf("b: %1.3e, %1.3e, %1.3e === %1.3e, %1.3e, %1.3e\n", b->position[0], b->position[1], b->position[2], b->force[0], b->force[1], b->force[2]);
+
             clearForces();
 
             err = calculateError();
@@ -472,15 +534,18 @@ void Simulation::relax(){
             if(err>Constants::ERROR_THRESHOLD){
                 restorePositions(0);
             }
+
             double v = (Constants::ERROR_THRESHOLD * working_dt*0.5/err);
             double new_dt = pow(v, 0.25)*working_dt;
 
-            working_dt = new_dt>2*working_dt?2*working_dt:new_dt;
+
+            working_dt = new_dt>100*working_dt?100*working_dt:new_dt;
             working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
         } while (err>Constants::ERROR_THRESHOLD);
-        printf("%e %e\n", out_of_eq, working_dt);
+        //printf("out of eq: %e, error: %e , dt %e\n", out_of_eq, err, working_dt);
         relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
     }
+    printf("relaxed!\n");
 }
 
 
@@ -488,11 +553,11 @@ void Simulation::relax(){
 void Simulation::step(){
 
     relax();
-    for(ActinFilament* & rod : actins){
+    for(ActinFilament* rod : actins){
         rod->updateBounds();
     }
 
-    for(MyosinMotor* & rod : myosins){
+    for(MyosinMotor* rod : myosins){
         rod->updateBounds();
     }
 

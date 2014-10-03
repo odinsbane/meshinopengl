@@ -12,11 +12,11 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 100;
-    const int MYOSINS = 20;
+    const int ACTINS = 240;
+    const int MYOSINS = 80;
 
     //simulation
-    const double DT = 1e-5;
+    const double DT = 1e-2;
     const double WIDTH = 6.4;
     const double SEED_WIDTH=6.4;
     const double THICKNESS = 0.56;
@@ -24,7 +24,7 @@ namespace Constants {
     const double STEPS_PER_FRAME=1000;
     const double SUB_STEPS=10000;
     const double RELAXATION_LIMIT = 5;
-    const double ERROR_THRESHOLD = 1e-3;
+    const double ERROR_THRESHOLD = 1e-1;
     const double REPULSION=1;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 1; //constant force

@@ -22,6 +22,8 @@
 #define __ParallelBalls__Display__
 
 #include <iostream>
+#include <ctime>
+#include <string>
 
 class CylinderRepresentation{
 
@@ -86,6 +88,7 @@ private:
     Camera* camera;
     int running = 0;
     CylinderRepresentation* repr;
+    bool snapshot=false;
 public:
     Display(int N);
     int initialize();
@@ -93,6 +96,7 @@ public:
     int render();
     void shutdown();
     void startWriter();
+    void takeSnapShot();
     ~Display(){
         delete[] pixbuf;
     }
