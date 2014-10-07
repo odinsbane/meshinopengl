@@ -403,6 +403,7 @@ void Simulation::relax(){
 
     ActinFilament* a = actins[0];
     ActinFilament* b = actins[1];
+    int stepped = 0;
     while(!relaxed) {
         double err, out_of_eq;
         do {
@@ -541,11 +542,17 @@ void Simulation::relax(){
 
             working_dt = new_dt>100*working_dt?100*working_dt:new_dt;
             working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
+
         } while (err>Constants::ERROR_THRESHOLD);
         //printf("out of eq: %e, error: %e , dt %e\n", out_of_eq, err, working_dt);
         relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
+        stepped++;
+        if(stepped>Constants::SUB_STEPS){
+            printf("break\n");
+            break;
+        }
     }
-    printf("relaxed!\n");
+    //printf("relaxed!\n");
 }
 
 

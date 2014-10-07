@@ -70,6 +70,7 @@ public:
     ActinFilament(double l, double r) : Rod(l,r){}
 
 };
+
 class MyosinMotor : public Rod{
     public:
         double F0, alpha_s, K_m, tau_B;

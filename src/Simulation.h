@@ -22,9 +22,9 @@ namespace Constants {
     const double THICKNESS = 0.56;
     const double STEPS_PER_SIMULATE=250;
     const double STEPS_PER_FRAME=1000;
-    const double SUB_STEPS=10000;
-    const double RELAXATION_LIMIT = 5;
-    const double ERROR_THRESHOLD = 1e-1;
+    const double SUB_STEPS=1;
+    const double RELAXATION_LIMIT = 500;
+    const double ERROR_THRESHOLD = 1e+1;
     const double REPULSION=1;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 1; //constant force
