@@ -17,13 +17,15 @@
 #include <memory>
 #include <mutex>
 #include <glm/geometric.hpp> //glm::dot
+#include <array>
+
 #define GLM_FORCE_RADIANS
 #include <glm/gtx/rotate_vector.hpp>
 namespace Line3D{
     double distance(glm::dvec3 &position, glm::dvec3 &direction, double length, const glm::dvec3 &point);
     const glm::dvec3 origin(0,0,0);
     double closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point);
-    std::vector<double> sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 point, double radius);
+    std::vector<double> sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 &point, double radius);
 }
 
 class Box3D{
@@ -72,9 +74,16 @@ public:
 };
 
 class MyosinMotor : public Rod{
+    std::array<ActinFilament*, 2> bound;
     public:
         double F0, alpha_s, K_m, tau_B;
-        MyosinMotor(double l, double r) : Rod(l,r){}
+        MyosinMotor(double l, double r) : Rod(l,r){bound[0] = 0;bound[1] = 0;}
+        ActinFilament* getBound(int head);
+        void bind(ActinFilament* f, int head);
+        bool isBound(int head){return bound[head]!=0;}
+        const static int FRONT=0;
+        const static int BACK = 0;
+
 };
 
 

@@ -8,6 +8,7 @@
 #include "rod.h"
 #include "FRandom.h"
 #include <math.h>
+#include "interactions.h"
 
 namespace Constants {
 
@@ -61,6 +62,7 @@ class Simulation{
     std::vector<std::unique_ptr<std::vector<double>>> force_record;
     std::vector<ActinFilament*> actins;
     std::vector<MyosinMotor*> myosins;
+    std::vector<MyosinMotorBinding*> bindings;
     FRandom* number_generator;
     void seedActinFilaments();
     void seedMyosinMotors();

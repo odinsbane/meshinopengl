@@ -9,20 +9,25 @@
 #ifndef __ParallelBalls__interactions__
 #define __ParallelBalls__interactions__
 #include <array>
-#include <rod.h>
-
+#include "rod.h"
+#include "FRandom.h"
+#include <math.h>
 class MyosinMotorBinding{
-    MyosinMotor& motor;
-    std::array<ActinFilament*, 2> bound;
+    MyosinMotor* motor;
+    std::array<double, 2> binding_position;
+    std::array<double, 2> current_time;
+    std::array<double, 2> unbind_time;
+    FRandom* number_generator;
 
     public:
-        static int FRONT=0;
-        static int BACK = 0;
 
-        MyosinMotorBinding(MyosinMotor &m){
+
+        MyosinMotorBinding(MyosinMotor* m){
             motor = m;
         }
-
+        void bind(ActinFilament* f, int head, double position);
+        void applyForces();
+        void setNumberGenerator(FRandom* ng){number_generator=ng;}
 };
 
 class CrosslinkedFilaments{

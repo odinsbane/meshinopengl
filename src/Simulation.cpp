@@ -112,20 +112,21 @@ void Simulation::prepareRelaxSpace(){
 }
 
 glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 a, glm::dvec3 b) {
-    return a;
+    return b;
 }
 void Simulation::seedMyosinMotors(){
     for(int i = 0; i<Constants::MYOSINS; i++){
         MyosinMotor* motor = createNewMotor();
-
-        //MyosinMotorBinding bind = new MyosinMotorBinding(this, motor);
+        std::cout << motor->isBound(0);
+        MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
+        bind->setNumberGenerator(number_generator);
         ActinFilament* host = actins[number_generator->nextInt(actins.size())];
 
         double s = (number_generator->nextDouble() - 0.5) * host->length;
         glm::dvec3 host_a = host->getPoint(s);
 
-        //bind.bind(host, MyosinMotor.FRONT, s);
-
+        bind->bind(host, MyosinMotor::FRONT, s);
+        std::cout << motor->isBound(0) <<"\n";
         std::vector<ActinFilament*> possibles;
         for (ActinFilament* target : actins) {
             if (host == target) continue;
@@ -150,7 +151,7 @@ void Simulation::seedMyosinMotors(){
             double s2 = intersections[number_generator->nextInt(intersections.size())];
             glm::dvec3 target_p = other->getPoint(s2);
             host_b = getReflectedPoint(host_a, target_p);
-            //bind.bind(other, MyosinMotor.BACK, s2);
+            bind->bind(other, MyosinMotor::BACK, s2);
         } else {
             do {
                double phi = PI * number_generator->nextDouble();
@@ -168,7 +169,7 @@ void Simulation::seedMyosinMotors(){
         }
 
 
-        //bindings.add(bind);
+        bindings.push_back(bind);
 
 
         motor->position = glm::dvec3(
@@ -204,6 +205,13 @@ void Simulation::initialize(){
 }
 
 double Simulation::prepareForces(){
+
+    for(MyosinMotorBinding* binding: bindings){
+
+        binding->applyForces();
+
+    }
+
     int N = actins.size();
 
     for(int i = 0; i<N; i++){

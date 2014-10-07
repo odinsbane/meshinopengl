@@ -45,15 +45,17 @@ double Line3D::closestApproachPosition(glm::dvec3 &center, glm::dvec3 &direction
     }
 }
 
-std::vector<double> Line3D::sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 point, double radius){
+std::vector<double> Line3D::sphereBounds(glm::dvec3 &center, glm::dvec3 &direction, double length, glm::dvec3 &point, double radius){
     //find which zone point lies in.
     std::vector<double> points;
     glm::dvec3 r = point - center;
+
     double proj = glm::dot(direction,r);
     double half = length/2.0;
 
     glm::dvec3 r_perp( r[0] - proj*direction[0], r[1] - proj*direction[1], r[2] - proj*direction[2]);
     double perp = glm::length(r_perp);
+
     if(perp>radius){
         return points;
     }
@@ -1020,4 +1022,8 @@ double Rod::update(double dt){
 
 std::vector<double> Rod::getIntersections(glm::dvec3 &point, double radius) {
     return Line3D::sphereBounds(position, direction, length, point, radius);
+}
+
+void MyosinMotor::bind(ActinFilament* f, int head){
+    bound[head] = f;
 }
