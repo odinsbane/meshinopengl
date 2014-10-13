@@ -12,11 +12,17 @@
 #include "rod.h"
 #include "FRandom.h"
 #include <math.h>
+#include <glm/geometric.hpp> //glm::dot
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include "Constants.h"
+
 class MyosinMotorBinding{
     MyosinMotor* motor;
     std::array<double, 2> binding_position;
     std::array<double, 2> current_time;
     std::array<double, 2> unbind_time;
+    std::array<double, 2> sliding;
     FRandom* number_generator;
 
     public:
@@ -28,12 +34,17 @@ class MyosinMotorBinding{
         void bind(ActinFilament* f, int head, double position);
         void applyForces();
         void setNumberGenerator(FRandom* ng){number_generator=ng;}
+
+    void headForce(int head);
 };
 
 class CrosslinkedFilaments{
     std::array<ActinFilament*, 2> filaments;
     std::array<double, 2> locations;
-
+    public:
+        double K_x;
+        double length;
+        double tau_B;
 };
 
 #endif

@@ -61,6 +61,8 @@ int main(int argc, const char * argv[])
 
         }
         steps++;
+
+
 #ifdef GLFW_DISPLAY
         if(updateGraphics()!=0) run = false;
 #else

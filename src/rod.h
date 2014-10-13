@@ -12,12 +12,14 @@
 #include <iostream>
 #include <vector>
 #include <mutex>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <memory>
 #include <mutex>
 #include <glm/geometric.hpp> //glm::dot
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <array>
+#include <math.h>
+#include "Constants.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtx/rotate_vector.hpp>
@@ -67,6 +69,18 @@ class Rod{
 
 
 };
+
+class ProxyRod : public Rod{
+    Rod* rod;
+public:
+    ProxyRod(Rod* r) : Rod(r->length, r->diameter*0.5){
+        rod=r;
+    }
+    void applyForce(glm::dvec4* force){
+        rod->applyForce(force);
+    }
+};
+
 class ActinFilament : public Rod{
 public:
     ActinFilament(double l, double r) : Rod(l,r){}
@@ -82,8 +96,9 @@ class MyosinMotor : public Rod{
         void bind(ActinFilament* f, int head);
         bool isBound(int head){return bound[head]!=0;}
         const static int FRONT=0;
-        const static int BACK = 0;
+        const static int BACK = 1;
 
+    double bind_length;
 };
 
 

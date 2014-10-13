@@ -1,8 +1,4 @@
-#include <memory>
-#include <math.h>
 #include "rod.h"
-//TODO
-const double REPEL = 1;
 
 double Line3D::distance(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point) {
     glm::dvec3 r = point - center;
@@ -479,7 +475,7 @@ double Rod::collide(Rod &other){
             printf("don't do this!");
         } else{
 
-            double factor = interference*REPEL/mag;
+            double factor = interference*Constants::REPULSION/mag;
             applyForce(new glm::dvec4(
                         -ab[0]*factor,
                         -ab[1]*factor,
@@ -971,10 +967,6 @@ glm::dvec2 Rod::intersections(Rod &other){
 
 }
 
-glm::dvec2 getIntersections(glm::dvec3 &point, double radius){
-
-}
-
 
 glm::dvec3 Rod::getPoint(double s) {
     return glm::dvec3(position[0] + direction[0]*s, position[1] + direction[1]*s, position[2] + direction[2]*s);
@@ -1026,4 +1018,8 @@ std::vector<double> Rod::getIntersections(glm::dvec3 &point, double radius) {
 
 void MyosinMotor::bind(ActinFilament* f, int head){
     bound[head] = f;
+}
+
+ActinFilament *MyosinMotor::getBound(int head) {
+    return bound[head];
 }
