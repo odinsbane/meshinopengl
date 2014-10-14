@@ -433,7 +433,7 @@ void Display::takeSnapShot(){
     char* str_buf = new char[100];
     auto start = std::chrono::system_clock::now();
 
-    sprintf(str_buf, "snapshot-%ld.tif", std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count());
+    sprintf(str_buf, "snapshot-%lld.tif", std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count());
 
     TiffWriter writes(str_buf, height, width);
     writes.writeFrame(buf);

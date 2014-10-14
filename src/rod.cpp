@@ -1023,3 +1023,13 @@ void MyosinMotor::bind(ActinFilament* f, int head){
 ActinFilament *MyosinMotor::getBound(int head) {
     return bound[head];
 }
+
+bool ActinFilament::isBound(ActinFilament *filament) {
+
+    for(void* o: bound){
+        if(filament==o){
+            return true;
+        }
+    }
+    return false;
+}

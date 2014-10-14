@@ -1,11 +1,12 @@
 #include <random>
-#include <glm/vec3.hpp>
+#include <glm/vec3.hpp>  //vec3
+#include <glm/geometric.hpp> //normalize
 #ifndef _FRANDOM_
 #define _FRANDOM_
     class FRandom{
         private:
             std::mt19937_64 engine;
-            double max = 1.0*std::mt19937_64::max();
+            double imax = 1.0/(1.0*std::mt19937_64::max());
         public:
             FRandom(long seed){
                 engine.seed(seed);
@@ -15,7 +16,7 @@
             }
 
             double nextDouble(){
-                return engine()/max;
+                return engine()*imax;
             }
             glm::dvec3 randomDirection(){
                 glm::dvec3 v(nextDouble() - 0.5, nextDouble() - 0.5, nextDouble() - 0.5);

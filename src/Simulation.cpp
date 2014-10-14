@@ -28,7 +28,9 @@ CrosslinkedFilaments* Simulation::createNewCrosslinkedFilaments(){
     x->K_x = Constants::K_x;
     x->length = Constants::CROSS_LINK_LENGTH;
     x->tau_B = Constants::CROSS_LINK_BINDING_TIME;
+    return x;
 }
+
 const double PI = 3.141592653589793;
 
 void Simulation::seedCrosslinkers(){
@@ -59,8 +61,34 @@ void Simulation::seedCrosslinkers(){
     }
 
 }
-void Simulation::crosslinkFilaments(ActinFilament* a, ActinFilament* b){
+void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
+    if(fa->isBound(fb)) return;
 
+    CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
+
+    glm::dvec2 sections = getReflectedIntersections(fa, fb);
+    glm::dvec3 a = fa->getPoint(sections[0]);
+    glm::dvec3 rb = getReflectedPoint(fb->position, a);
+    std::vector<double> possible = fb->getIntersections(rb, x->length);
+
+        if(possible.size()==0){
+            printf("Warning: cross linked filaments not close enough\n");
+            possible = fa->getIntersections(fb->position, x->length);
+            if(possible.size()==0) return;
+            printf("wtf\n");
+        }
+
+
+        double bs = possible[number_generator->nextInt(possible.size())];
+
+
+    glm::dvec3 b = fb->getPoint(bs);
+    x->filaments[0] = fa;
+    x->filaments[1] = fb;
+
+    double duration = -x->tau_B*log(number_generator->nextDouble());
+
+    xlinkers.push_back(x);
 }
 void Simulation::seedActinFilaments(){
     for(int i = 0; i<Constants::ACTINS; i++){
@@ -154,6 +182,15 @@ glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 a, glm::dvec3 b) {
     return b;
 }
 
+glm::dvec2 Simulation::getReflectedIntersections(ActinFilament* a, ActinFilament* b){
+    glm::dvec3 original = b->position;
+    glm::dvec3 reflected = getReflectedPoint(a->position, b->position);
+    b->position = reflected;
+    glm::dvec2 intersections = a->intersections(*b);
+    b->position = original;
+    return intersections;
+}
+
 /**
 * NOT THREAD SAFE!
 */
@@ -245,8 +282,24 @@ void Simulation::seedMyosinMotors(){
 void Simulation::initialize(){
     prepareRelaxSpace();
     seedActinFilaments();
-    seedMyosinMotors();
+    actins[0]->position[0] = 0.1;
+    actins[0]->position[1] = 0;
+    actins[0]->position[2] = 0;
 
+    actins[1]->position[0] = -0.1;
+    actins[1]->position[1] = 0;
+    actins[1]->position[2] = 0;
+
+    printf("%ld actin filaments\n", actins.size());
+    seedMyosinMotors();
+    printf("%ld myosin minifilaments\n", myosins.size());
+
+    relax();
+
+    seedCrosslinkers();
+    xlinkers[0]->length = 5;
+    printf("%ld xlinkers\n", xlinkers.size());
+    relax();
 }
 
 void Simulation::applyMembraneForce(Rod* rod){
@@ -264,7 +317,9 @@ void Simulation::applyMembraneForce(Rod* rod){
 }
 
 double Simulation::prepareForces(){
-
+    for(CrosslinkedFilaments* x: xlinkers){
+        x->applyForces();
+    }
     for(MyosinMotorBinding* binding: bindings){
 
         binding->applyForces();
@@ -283,7 +338,7 @@ double Simulation::prepareForces(){
 
         for(int j = 0; j<Constants::MYOSINS; j++){
             Rod *other = myosins[j];
-            rod->collide(*other);
+            reflectedCollision(other, rod);
         }
     }
 
@@ -292,7 +347,7 @@ double Simulation::prepareForces(){
         applyMembraneForce(rod);
         for(int j = i+1; j<Constants::MYOSINS; j++){
             Rod *other = myosins[j];
-            rod->collide(*other);
+            reflectedCollision(other, rod);
         }
     }
 

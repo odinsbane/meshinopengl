@@ -46,3 +46,23 @@ void MyosinMotorBinding::headForce(int head){
     glm::dvec4* filament_force = new glm::dvec4(-(*head_force)[0], -(*head_force)[1], -(*head_force)[2], binding_position[head]);
     filament->applyForce(filament_force);
 }
+
+void CrosslinkedFilaments::applyForces() {
+
+    glm::dvec3 a_pos = filaments[0]->getPoint(locations[0]);
+    glm::dvec3 b_pos = filaments[1]->getPoint(locations[1]);
+    b_pos = getReflectedPoint(a_pos, b_pos);
+    glm::dvec3 r = b_pos - a_pos;
+    double mag = glm::length(r);
+    double f = 0;
+
+    if(mag>0){
+        f = (mag - length)*K_x/mag;
+    }
+    glm::dvec4* force_a = new glm::dvec4(r[0]*f, r[1]*f, r[2]*f, locations[0]);
+    filaments[0]->applyForce(force_a);
+    glm::dvec4* force_b = new glm::dvec4(-r[0]*f, -r[1]*f, -r[2]*f, locations[1]);
+    filaments[1]->applyForce(force_b);
+
+
+}

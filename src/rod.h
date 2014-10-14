@@ -82,9 +82,10 @@ public:
 };
 
 class ActinFilament : public Rod{
+    std::vector<void*> bound;
 public:
     ActinFilament(double l, double r) : Rod(l,r){}
-
+    bool isBound(ActinFilament* f);
 };
 
 class MyosinMotor : public Rod{

@@ -17,6 +17,7 @@ class Simulation{
     std::vector<ActinFilament*> actins;
     std::vector<MyosinMotor*> myosins;
     std::vector<MyosinMotorBinding*> bindings;
+    std::vector<CrosslinkedFilaments*> xlinkers;
     FRandom* number_generator;
     void seedActinFilaments();
     void seedMyosinMotors();
@@ -45,9 +46,8 @@ class Simulation{
 
         void seedCrosslinkers();
         double getReflectedApproach(ActinFilament *a, ActinFilament *b);
-
-    double reflectedCollision(Rod *other, Rod *filament);
-
+        double reflectedCollision(Rod *other, Rod *filament);
+        glm::dvec2 getReflectedIntersections(ActinFilament *a, ActinFilament *b);
     void crosslinkFilaments(ActinFilament *a, ActinFilament *b);
 };
 
