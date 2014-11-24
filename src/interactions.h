@@ -48,6 +48,8 @@ class CrosslinkedFilaments{
         double length;
         double tau_B;
         void applyForces();
+        void update(double dt);
+        void unbind();
 };
 
 #endif

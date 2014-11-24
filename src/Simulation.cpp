@@ -31,7 +31,7 @@ CrosslinkedFilaments* Simulation::createNewCrosslinkedFilaments(){
     return x;
 }
 
-const double PI = 3.141592653589793;
+//const double PI = 3.141592653589793;
 
 void Simulation::seedCrosslinkers(){
 
@@ -90,6 +90,42 @@ void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
 
     xlinkers.push_back(x);
 }
+
+void Simulation::freeSeedActinFilaments(){
+    for(int i = 0; i<Constants::ACTINS; i++){
+        //generate a free filament.
+        double x = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+        double y = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+        double z = Constants::THICKNESS * number_generator->nextDouble() - 0.5 * Constants::THICKNESS;
+
+        double theta = 2 * PI * number_generator->nextDouble();
+
+
+        ActinFilament* f = createNewFilament();
+
+        double available_angle =  Constants::ANGLE_SIGMA;
+
+        double phi = PI / 2 + (0.5 - number_generator->nextDouble()) * available_angle;
+
+        f->direction = glm::dvec3(
+                cos(theta) * sin(phi),
+                sin(theta) * sin(phi),
+                cos(phi)
+        );
+
+
+        f->position = glm::dvec3(
+                x,
+                y,
+                z
+        );
+        f->updateBounds();
+        actins.push_back(f);
+        //relaxRod(f);
+
+    }
+}
+
 void Simulation::seedActinFilaments(){
     for(int i = 0; i<Constants::ACTINS; i++){
         if(number_generator->nextDouble()<Constants::MEMBRANE_BOUND_ACTIN) {
@@ -281,14 +317,7 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
     prepareRelaxSpace();
-    seedActinFilaments();
-    actins[0]->position[0] = 0.1;
-    actins[0]->position[1] = 0;
-    actins[0]->position[2] = 0;
-
-    actins[1]->position[0] = -0.1;
-    actins[1]->position[1] = 0;
-    actins[1]->position[2] = 0;
+    freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
     seedMyosinMotors();
@@ -297,7 +326,6 @@ void Simulation::initialize(){
     relax();
 
     seedCrosslinkers();
-    xlinkers[0]->length = 5;
     printf("%ld xlinkers\n", xlinkers.size());
     relax();
 }
@@ -328,29 +356,30 @@ double Simulation::prepareForces(){
 
     int N = actins.size();
 
-    for(int i = 0; i<N; i++){
-        Rod *rod = actins[i];
-        applyMembraneForce(rod);
-        for(int j = i+1; j<N; j++){
-            Rod *other = actins[j];
-            reflectedCollision(other, rod);
+    if(Constants::STERIC_INTERACTIONS) {
+        for (int i = 0; i < N; i++) {
+            Rod *rod = actins[i];
+            applyMembraneForce(rod);
+            for (int j = i + 1; j < N; j++) {
+                Rod *other = actins[j];
+                reflectedCollision(other, rod);
+            }
+
+            for (int j = 0; j < Constants::MYOSINS; j++) {
+                Rod *other = myosins[j];
+                reflectedCollision(other, rod);
+            }
         }
 
-        for(int j = 0; j<Constants::MYOSINS; j++){
-            Rod *other = myosins[j];
-            reflectedCollision(other, rod);
+        for (int i = 0; i < Constants::MYOSINS; i++) {
+            Rod *rod = myosins[i];
+            applyMembraneForce(rod);
+            for (int j = i + 1; j < Constants::MYOSINS; j++) {
+                Rod *other = myosins[j];
+                reflectedCollision(other, rod);
+            }
         }
     }
-
-    for(int i = 0; i<Constants::MYOSINS; i++){
-        Rod *rod = myosins[i];
-        applyMembraneForce(rod);
-        for(int j = i+1; j<Constants::MYOSINS; j++){
-            Rod *other = myosins[j];
-            reflectedCollision(other, rod);
-        }
-    }
-
     double sum = 0;
     for(int i = 0; i<N; i++){
         Rod *rod = actins[i];
@@ -620,7 +649,7 @@ void Simulation::relax(){
             double new_dt = pow(v, 0.25)*working_dt;
 
 
-            working_dt = new_dt>100*working_dt?100*working_dt:new_dt;
+            working_dt = new_dt>1.5*working_dt?1.5*working_dt:new_dt;
             //working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
             //working_dt = working_dt<0.01*Constants::DT?0.01*Constants::DT:working_dt;
         } while (err>Constants::ERROR_THRESHOLD);
@@ -635,10 +664,14 @@ void Simulation::relax(){
     //printf("relaxed!\n");
 }
 
-
+void Simulation::updateInteractions(double dt){
+    for(CrosslinkedFilaments* xf : xlinkers){
+        if(xf.)
+    }
+}
 
 void Simulation::step(){
-
+    updateInteractions(Constants::DT);
     relax();
     for(ActinFilament* rod : actins){
         rod->updateBounds();

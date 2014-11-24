@@ -1,11 +1,16 @@
 
 #ifndef ___PARALLELRODS__CONSTANTS__
 #define ___PARALLELRODS__CONSTANTS__
+
+#ifndef PI
+#define PI 3.141592653589793
+#endif
+
 namespace Constants {
 
     //initialization
-    const int ACTINS = 2;
-    const int MYOSINS = 0;
+    const int ACTINS = 300;
+    const int MYOSINS = 100;
 
     //simulation
     const double DT = 1e-2;
@@ -39,11 +44,13 @@ namespace Constants {
     const double ACTIN_LENGTH_SIGMA = 0.1;
     const double MEMBRANE_BOUND_ACTIN = 0.0;
 
+    const double ANGLE_SIGMA = PI;
     const double CROSS_LINK_LENGTH = 0.2;
     const double CROSS_LINK_BINDING_TIME = 1e9;
     const double CROSS_LINK_BIND_PROBABILITY = 0.1;
     const bool CROSS_LINKER_TURNOVER = false;
     const double K_x = 100;
+    const bool STERIC_INTERACTIONS = false;
 
 }
 

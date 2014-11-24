@@ -21,6 +21,7 @@ class Simulation{
     FRandom* number_generator;
     void seedActinFilaments();
     void seedMyosinMotors();
+    void freeSeedActinFilaments();
     void restorePositions(int index);
     void clearForces();
     void copyForces(int index);
@@ -34,6 +35,7 @@ class Simulation{
     double prepareForces();
     void relax();
     void partialUpdate(double dt);
+    void updateInteractions(double dt);
     double calculateError();
     glm::dvec3 getReflectedPoint(glm::dvec3 a, glm::dvec3 b);
     void applyMembraneForce(Rod* fil);

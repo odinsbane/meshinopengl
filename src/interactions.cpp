@@ -66,3 +66,15 @@ void CrosslinkedFilaments::applyForces() {
 
 
 }
+
+void CrosslinkedFilaments::update(double dt){
+    current_time += dt;
+    if(current_time>unbind_time){
+        unbind();
+    }
+}
+
+void CrosslinkedFilaments::unbind() {
+
+}
+
