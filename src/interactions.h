@@ -35,14 +35,16 @@ class MyosinMotorBinding{
         void applyForces();
         void setNumberGenerator(FRandom* ng){number_generator=ng;}
         void headForce(int head);
+        void update(double dt);
 
 };
 
 class CrosslinkedFilaments{
     std::array<double, 2> locations;
-    double unbind_time;
-    double current_time;
+    double current_time=0;
+    bool finito = false;
     public:
+        double unbind_time;
         std::array<ActinFilament*, 2> filaments;
         double K_x;
         double length;
@@ -50,6 +52,7 @@ class CrosslinkedFilaments{
         void applyForces();
         void update(double dt);
         void unbind();
+        bool finished();
 };
 
 #endif

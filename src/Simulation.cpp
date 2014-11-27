@@ -1,4 +1,5 @@
 #include <ldap.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include "Simulation.h"
 
 ActinFilament* Simulation::createNewFilament(){
@@ -85,9 +86,11 @@ void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
     glm::dvec3 b = fb->getPoint(bs);
     x->filaments[0] = fa;
     x->filaments[1] = fb;
+    fa->bind(fb);
+    fb->bind(fa);
 
     double duration = -x->tau_B*log(number_generator->nextDouble());
-
+    x->unbind_time = duration;
     xlinkers.push_back(x);
 }
 
@@ -203,7 +206,7 @@ void Simulation::prepareRelaxSpace(){
     position_record.clear();
     force_record.clear();
     working_dt = Constants::DT;
-    int n = 6 * Constants::ACTINS + 6 * Constants::MYOSINS;
+    int n = 6 * actins.size() + 6 * myosins.size();
     for(int i = 0; i<2; i++) {
         std::vector<double> *ps = new std::vector<double>(n);
         position_record.push_back(std::unique_ptr<std::vector<double>>(ps));
@@ -316,8 +319,8 @@ void Simulation::seedMyosinMotors(){
 }
 
 void Simulation::initialize(){
-    prepareRelaxSpace();
-    freeSeedActinFilaments();
+
+    /*freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
     seedMyosinMotors();
@@ -327,7 +330,14 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
+    */
+    printf("creating test case\n");
+    createTestCase();
+    printf("preparing relax space\n");
+    prepareRelaxSpace();
+    printf("relaxing");
     relax();
+    printf("finished initialization\n");
 }
 
 void Simulation::applyMembraneForce(Rod* rod){
@@ -381,7 +391,7 @@ double Simulation::prepareForces(){
         }
     }
     double sum = 0;
-    for(int i = 0; i<N; i++){
+    for(int i = 0; i<Constants::ACTINS; i++){
         Rod *rod = actins[i];
         sum += rod->prepareForces();
     }
@@ -440,19 +450,19 @@ void Simulation::restorePositions(int index){
 
 void Simulation::copyForces(int index){
     int i = 0;
-    std::vector<double> *forces = force_record[index].get();
+    std::vector<double> &forces = *force_record[index].get();
     for(ActinFilament* rod : actins){
         for(int j = 0; j<3; j++){
-            forces[0][i + j]= rod->force[j];
-            forces[0][i + j + 3] = rod->torque[j];
+            forces[i + j]= rod->force[j];
+            forces[i + j + 3] = rod->torque[j];
         }
         i+=6;
     }
 
     for(MyosinMotor* rod : myosins){
         for(int j = 0; j<3; j++){
-            forces[0][i + j] = rod->force[j];
-            forces[0][i + j + 3] = rod->torque[j];
+            forces[i + j] = rod->force[j];
+            forces[i + j + 3] = rod->torque[j];
         }
         i+=6;
     }
@@ -665,8 +675,19 @@ void Simulation::relax(){
 }
 
 void Simulation::updateInteractions(double dt){
-    for(CrosslinkedFilaments* xf : xlinkers){
-        if(xf.)
+    std::vector<CrosslinkedFilaments*> to_remove;
+
+    for( auto g = xlinkers.begin(); g!=xlinkers.end(); g++){
+        CrosslinkedFilaments* xf = *g;
+        xf->update(dt);
+        if(xf->finished()){
+            xlinkers.erase(g);
+            g--;
+        }
+    }
+
+    for(MyosinMotorBinding* binding: bindings){
+        binding->update(dt);
     }
 }
 
@@ -705,4 +726,43 @@ double Simulation::reflectedCollision(Rod *other, Rod *filament) {
             double ret = filament->collide(r);
             return ret;
         }
+}
+
+void Simulation::createTestCase() {
+
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+    ActinFilament* b = createNewFilament();
+    b->position[0] = 2*Constants::CROSS_LINK_LENGTH;
+    b->position[1] = 0;
+    b->position[2] = 0;
+
+    b->direction[0] = 0;
+    b->direction[1] = 1;
+    b->direction[2] = 0;
+
+    actins.push_back(a);
+    actins.push_back(b);
+
+    CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
+
+    x->filaments[0] = a;
+    x->filaments[1] = b;
+
+    a->bind(b);
+    b->bind(a);
+
+    double duration = -x->tau_B*log(number_generator->nextDouble());
+    duration = 1e6;
+    x->unbind_time = duration;
+
+    xlinkers.push_back(x);
+
+
 }

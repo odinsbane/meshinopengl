@@ -1033,3 +1033,16 @@ bool ActinFilament::isBound(ActinFilament *filament) {
     }
     return false;
 }
+
+void ActinFilament::bind(ActinFilament *f){
+    bound.push_back(f);
+}
+
+void ActinFilament::unbind(ActinFilament* f){
+    for(auto g = bound.begin(); g!=bound.end(); g++){
+        if(*g==f){
+            bound.erase(g);
+        }
+        return;
+    }
+}

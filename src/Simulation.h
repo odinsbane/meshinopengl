@@ -50,7 +50,8 @@ class Simulation{
         double getReflectedApproach(ActinFilament *a, ActinFilament *b);
         double reflectedCollision(Rod *other, Rod *filament);
         glm::dvec2 getReflectedIntersections(ActinFilament *a, ActinFilament *b);
-    void crosslinkFilaments(ActinFilament *a, ActinFilament *b);
+        void crosslinkFilaments(ActinFilament *a, ActinFilament *b);
+        void createTestCase();
 };
 
 #endif

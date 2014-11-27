@@ -86,6 +86,8 @@ class ActinFilament : public Rod{
 public:
     ActinFilament(double l, double r) : Rod(l,r){}
     bool isBound(ActinFilament* f);
+    void bind(ActinFilament* f);
+    void unbind(ActinFilament* f);
 };
 
 class MyosinMotor : public Rod{

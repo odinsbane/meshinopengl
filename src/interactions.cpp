@@ -47,6 +47,10 @@ void MyosinMotorBinding::headForce(int head){
     filament->applyForce(filament_force);
 }
 
+void MyosinMotorBinding::update(double dt){
+
+}
+
 void CrosslinkedFilaments::applyForces() {
 
     glm::dvec3 a_pos = filaments[0]->getPoint(locations[0]);
@@ -75,6 +79,11 @@ void CrosslinkedFilaments::update(double dt){
 }
 
 void CrosslinkedFilaments::unbind() {
-
+    finito = true;
+    filaments[0]->unbind(filaments[1]);
+    filaments[1]->unbind(filaments[0]);
 }
 
+bool CrosslinkedFilaments::finished(){
+    return finito;
+}
