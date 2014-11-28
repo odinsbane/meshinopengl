@@ -72,20 +72,23 @@ void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
     glm::dvec3 rb = getReflectedPoint(fb->position, a);
     std::vector<double> possible = fb->getIntersections(rb, x->length);
 
-        if(possible.size()==0){
-            printf("Warning: cross linked filaments not close enough\n");
-            possible = fa->getIntersections(fb->position, x->length);
-            if(possible.size()==0) return;
-            printf("wtf\n");
-        }
+    if(possible.size()==0){
+        printf("Warning: cross linked filaments not close enough\n");
+        possible = fa->getIntersections(fb->position, x->length);
+        if(possible.size()==0) return;
+        printf("wtf\n");
+    }
 
 
-        double bs = possible[number_generator->nextInt(possible.size())];
+    double bs = possible[number_generator->nextInt(possible.size())];
 
 
     glm::dvec3 b = fb->getPoint(bs);
     x->filaments[0] = fa;
+    x->locations[0] = sections[0];
     x->filaments[1] = fb;
+    x->locations[1] = bs;
+
     fa->bind(fb);
     fb->bind(fa);
 
@@ -320,19 +323,20 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-    /*freeSeedActinFilaments();
+    freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
     seedMyosinMotors();
     printf("%ld myosin minifilaments\n", myosins.size());
 
-    relax();
+    //relax();
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-    */
+
     printf("creating test case\n");
-    createTestCase();
+
+    //createTestCase();
     printf("preparing relax space\n");
     prepareRelaxSpace();
     printf("relaxing");
@@ -652,6 +656,7 @@ void Simulation::relax(){
 
             if(err>Constants::ERROR_THRESHOLD){
                 //too large of a step size.
+                printf("restored.");
                 restorePositions(0);
             }
 
@@ -663,6 +668,7 @@ void Simulation::relax(){
             //working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
             //working_dt = working_dt<0.01*Constants::DT?0.01*Constants::DT:working_dt;
         } while (err>Constants::ERROR_THRESHOLD);
+        printf("out of eq %f \n", out_of_eq);
         relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
         stepped++;
         if(stepped>Constants::SUB_STEPS){
@@ -729,6 +735,33 @@ double Simulation::reflectedCollision(Rod *other, Rod *filament) {
 }
 
 void Simulation::createTestCase() {
+    seedCrosslinkerTestCase();
+}
+void Simulation::seedCrosslinkerTestCase(){
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+    ActinFilament* b = createNewFilament();
+    b->position[0] = 0.5*Constants::CROSS_LINK_LENGTH;
+    b->position[1] = 0;
+    b->position[2] = 0;
+
+    b->direction[0] = 0;
+    b->direction[1] = 1;
+    b->direction[2] = 0;
+
+    actins.push_back(a);
+    actins.push_back(b);
+
+    seedCrosslinkers();
+}
+
+void Simulation::twoFilamentTestCase() {
 
     ActinFilament* a = createNewFilament();
     a->position[0] = 0;

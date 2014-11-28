@@ -40,10 +40,10 @@ class MyosinMotorBinding{
 };
 
 class CrosslinkedFilaments{
-    std::array<double, 2> locations;
     double current_time=0;
     bool finito = false;
     public:
+        std::array<double, 2> locations;
         double unbind_time;
         std::array<ActinFilament*, 2> filaments;
         double K_x;

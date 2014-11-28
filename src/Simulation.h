@@ -52,6 +52,8 @@ class Simulation{
         glm::dvec2 getReflectedIntersections(ActinFilament *a, ActinFilament *b);
         void crosslinkFilaments(ActinFilament *a, ActinFilament *b);
         void createTestCase();
+        void twoFilamentTestCase();
+        void seedCrosslinkerTestCase();
 };
 
 #endif
