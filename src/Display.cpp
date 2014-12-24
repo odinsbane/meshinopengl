@@ -357,15 +357,15 @@ int Display::render(){
         glBindVertexArray(vao);
         GetError();
 
-        GLuint shift_loc = glGetUniformLocation(program, "shift");
-        GLuint color_loc = glGetUniformLocation(program, "color");
-        GLuint trans_loc = glGetUniformLocation(program, "transparency");
+        GLint shift_loc = glGetUniformLocation(program, "shift");
+        GLint color_loc = glGetUniformLocation(program, "color");
+        GLint trans_loc = glGetUniformLocation(program, "transparency");
         float* shift = new float[3];
         shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
         for(int i=0; i<3; i++) {
             for(int j=0; j<3; j++) {
-                shift[0] = (i-1)*Constants::WIDTH;
-                shift[1] = (j-1)*Constants::WIDTH;
+                shift[0] = (float)((i-1)*Constants::WIDTH);
+                shift[1] = (float)((j-1)*Constants::WIDTH);
                 glUniform3fv(shift_loc, 1, shift);
 
                 if(i==1 && j==1){

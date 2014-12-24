@@ -10,6 +10,7 @@
 #include <math.h>
 #include "interactions.h"
 #include "Constants.h"
+
 class Simulation{
     double working_dt;
     std::vector<std::unique_ptr<std::vector<double>>> position_record;
@@ -37,7 +38,7 @@ class Simulation{
     void partialUpdate(double dt);
     void updateInteractions(double dt);
     double calculateError();
-    glm::dvec3 getReflectedPoint(glm::dvec3 a, glm::dvec3 b);
+    glm::dvec3 getReflectedPoint(glm::dvec3 &a, glm::dvec3 &b);
     void applyMembraneForce(Rod* fil);
     public:
         Simulation(){ number_generator = new FRandom();}
@@ -47,13 +48,16 @@ class Simulation{
         std::vector<MyosinMotor*> &getMyosins();
 
         void seedCrosslinkers();
-        double getReflectedApproach(ActinFilament *a, ActinFilament *b);
+        double getReflectedApproach(Rod *a, Rod *b);
         double reflectedCollision(Rod *other, Rod *filament);
         glm::dvec2 getReflectedIntersections(ActinFilament *a, ActinFilament *b);
         void crosslinkFilaments(ActinFilament *a, ActinFilament *b);
         void createTestCase();
         void twoFilamentTestCase();
         void seedCrosslinkerTestCase();
+        void myosinMotorTestCase();
+
+    void seedMyosinMotorTestCase();
 };
 
 #endif

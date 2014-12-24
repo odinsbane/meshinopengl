@@ -220,8 +220,32 @@ void Simulation::prepareRelaxSpace(){
     }
 }
 
-glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 a, glm::dvec3 b) {
-    return b;
+/**
+* Uses the periodic boundary conditions to determine the closest location
+* that dest could be.
+*/
+glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target) {
+    glm::dvec3 out;
+    double hw = Constants::WIDTH*0.5;
+    if( target[0] - src[0] > hw){
+            out[0] = target[0] - Constants::WIDTH;
+        } else if(target[0] - src[0]<-hw){
+            out[0] = target[0] + Constants::WIDTH;
+        } else{
+            out[0] = target[0];
+        }
+
+
+        if( target[1] - src[1] > hw){
+            out[1] = target[1] - Constants::WIDTH;
+        } else if(target[1] - src[1]<-hw){
+            out[1] = target[1] + Constants::WIDTH;
+        } else{
+            out[1] = target[1];
+        }
+
+    out[2] = target[2];
+    return out;
 }
 
 glm::dvec2 Simulation::getReflectedIntersections(ActinFilament* a, ActinFilament* b){
@@ -234,17 +258,33 @@ glm::dvec2 Simulation::getReflectedIntersections(ActinFilament* a, ActinFilament
 }
 
 /**
+* Clean it up afterwards!!
+*/
+Rod* getDummyFilament(Rod* f){
+    Rod* r = new Rod();
+    r->length = f->length;
+    r->position = f->position;
+    r->diameter = f->diameter;
+    r->direction = f->direction;
+    return r;
+}
+
+/**
 * NOT THREAD SAFE!
 */
-double Simulation::getReflectedApproach(ActinFilament* a, ActinFilament* b){
+double Simulation::getReflectedApproach(Rod* a, Rod* b){
 
     glm::dvec3 original = b->position;
     glm::dvec3 reflected = getReflectedPoint(a->position, b->position);
-    b->position = reflected;
-    double separation = a->closestApproach(*b);
-    b->position = original;
+    Rod* f = getDummyFilament(b);
+
+    f->position = reflected;
+
+    double separation = a->closestApproach(*f);
+    delete f;
     return separation;
 }
+
 
 void Simulation::seedMyosinMotors(){
     for(int i = 0; i<Constants::MYOSINS; i++){
@@ -323,20 +363,21 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-    freeSeedActinFilaments();
+
+    //freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
-    seedMyosinMotors();
+    //seedMyosinMotors();
     printf("%ld myosin minifilaments\n", myosins.size());
 
     //relax();
 
-    seedCrosslinkers();
+    //seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
 
     printf("creating test case\n");
 
-    //createTestCase();
+    createTestCase();
     printf("preparing relax space\n");
     prepareRelaxSpace();
     printf("relaxing");
@@ -665,10 +706,12 @@ void Simulation::relax(){
 
 
             working_dt = new_dt>1.5*working_dt?1.5*working_dt:new_dt;
+            if(working_dt>Constants::DT){
+                working_dt=Constants::DT;
+            }
             //working_dt = working_dt>Constants::DT?Constants::DT:working_dt;
             //working_dt = working_dt<0.01*Constants::DT?0.01*Constants::DT:working_dt;
         } while (err>Constants::ERROR_THRESHOLD);
-        printf("out of eq %f \n", out_of_eq);
         relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
         stepped++;
         if(stepped>Constants::SUB_STEPS){
@@ -676,12 +719,10 @@ void Simulation::relax(){
             break;
         }
     }
-    printf("out of eq: %e, error: %e , dt %e\n", out_of_eq, err, working_dt);
     //printf("relaxed!\n");
 }
 
 void Simulation::updateInteractions(double dt){
-    std::vector<CrosslinkedFilaments*> to_remove;
 
     for( auto g = xlinkers.begin(); g!=xlinkers.end(); g++){
         CrosslinkedFilaments* xf = *g;
@@ -697,6 +738,7 @@ void Simulation::updateInteractions(double dt){
     }
 }
 
+double step_dt = 0;
 void Simulation::step(){
     updateInteractions(Constants::DT);
     relax();
@@ -707,6 +749,7 @@ void Simulation::step(){
     for(MyosinMotor* rod : myosins){
         rod->updateBounds();
     }
+    step_dt += Constants::DT;
 
 }
 
@@ -734,8 +777,79 @@ double Simulation::reflectedCollision(Rod *other, Rod *filament) {
         }
 }
 
+void Simulation::myosinMotorTestCase(){
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+
+    ActinFilament* b = createNewFilament();
+    b->position[0] = Constants::MYOSIN_LENGTH + Constants::MYOSIN_BIND_LENGTH*2;
+    b->position[1] = 0;
+    b->position[2] = 0;
+
+    b->direction[0] = 0;
+    b->direction[1] = -1;
+    b->direction[2] = 0;
+
+    MyosinMotor* motor = createNewMotor();
+    motor->position[0] = Constants::MYOSIN_BIND_LENGTH + 0.5*Constants::MYOSIN_LENGTH ;
+    motor->position[1] = 0;
+    motor->position[2] = 0;
+    motor->direction[0] = -1;
+    motor->direction[1] = 0;
+    motor->direction[2] = 0;
+    motor->updateBounds();
+    MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
+    bind->setNumberGenerator(number_generator);
+
+    bind->bind(a, MyosinMotor::FRONT, 0);
+    bind->bind(b, MyosinMotor::BACK, 0);
+
+    actins.push_back(a);
+    actins.push_back(b);
+    myosins.push_back(motor);
+    bindings.push_back(bind);
+
+}
+
+void Simulation::seedMyosinMotorTestCase(){
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+
+    ActinFilament* b = createNewFilament();
+    b->position[0] = 0.8*Constants::MYOSIN_LENGTH;
+    b->position[1] = 0;
+    b->position[2] = 0;
+
+    b->direction[0] = 0;
+    b->direction[1] = -1;
+    b->direction[2] = 0;
+
+
+
+    actins.push_back(a);
+    actins.push_back(b);
+    seedMyosinMotors();
+
+}
+
+
+
 void Simulation::createTestCase() {
-    seedCrosslinkerTestCase();
+    //seedCrosslinkerTestCase();
+    myosinMotorTestCase();
+    //seedMyosinMotorTestCase();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();

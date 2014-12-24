@@ -48,7 +48,7 @@ class Rod{
         double length, diameter, stiffness, friction;
         double alpha_longitudinal = 0.5;
         double alpha_perpendicular = 1.0;
-        double alpha_rotational = 1.0;
+        double alpha_rotational = 1;
         Rod( double l, double r );
         glm::dvec3 direction;
         glm::dvec3 position;
@@ -97,7 +97,9 @@ class MyosinMotor : public Rod{
         MyosinMotor(double l, double r) : Rod(l,r){bound[0] = 0;bound[1] = 0;}
         ActinFilament* getBound(int head);
         void bind(ActinFilament* f, int head);
+        void unbind(int head){bound[head]=0;}
         bool isBound(int head){return bound[head]!=0;}
+        bool isFree(int head){return bound[head]==0;}
         const static int FRONT=0;
         const static int BACK = 1;
 

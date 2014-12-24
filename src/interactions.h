@@ -36,7 +36,8 @@ class MyosinMotorBinding{
         void setNumberGenerator(FRandom* ng){number_generator=ng;}
         void headForce(int head);
         void update(double dt);
-
+        void checkTime(int head, double dt);
+        void slideHead(int head, double dt);
 };
 
 class CrosslinkedFilaments{

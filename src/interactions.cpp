@@ -1,8 +1,29 @@
 #include "interactions.h"
 
-glm::dvec3 getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target){
-    return target;
+glm::dvec3 getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target) {
+    glm::dvec3 out;
+    double hw = Constants::WIDTH*0.5;
+    if( target[0] - src[0] > hw){
+        out[0] = target[0] - Constants::WIDTH;
+    } else if(target[0] - src[0]<-hw){
+        out[0] = target[0] + Constants::WIDTH;
+    } else{
+        out[0] = target[0];
+    }
+
+
+    if( target[1] - src[1] > hw){
+        out[1] = target[1] - Constants::WIDTH;
+    } else if(target[1] - src[1]<-hw){
+        out[1] = target[1] + Constants::WIDTH;
+    } else{
+        out[1] = target[1];
+    }
+
+    out[2] = target[2];
+    return out;
 }
+
 void MyosinMotorBinding::bind(ActinFilament* f, int head, double position){
     motor->bind(f, head);
     binding_position[head] = position;
@@ -26,7 +47,6 @@ void MyosinMotorBinding::headForce(int head){
     double ml = head==MyosinMotor::FRONT?0.5*motor->length:-0.5*motor->length;
     glm::dvec3 front_head = motor->getPoint(ml);
     glm::dvec3 attached_position = filament->getPoint( binding_position[head]);
-
     glm::dvec3 reflected = getReflectedPoint(front_head, attached_position);
 
     //line from myosin head to actin filament attachment location.
@@ -48,7 +68,58 @@ void MyosinMotorBinding::headForce(int head){
 }
 
 void MyosinMotorBinding::update(double dt){
+    checkTime(MyosinMotor::FRONT, dt);
+    checkTime(MyosinMotor::BACK, dt);
 
+    slideHead(MyosinMotor::FRONT, dt);
+    slideHead(MyosinMotor::BACK, dt);
+
+
+    if(Constants::MYOSIN_DIFFUSION_FORCE>0){
+
+        motor->clearForces();
+
+        double f = 2*Constants::MYOSIN_DIFFUSION_FORCE/(sqrt(3));
+
+        motor->applyForce( new glm::dvec4(
+                f*(number_generator->nextDouble() - 0.5),
+                f*(number_generator->nextDouble() - 0.5),
+                f*(number_generator->nextDouble() - 0.5),
+                motor->length*(number_generator->nextDouble() - 0.5)  )
+        );
+        motor->prepareForces();
+        motor->update(dt);
+    }
+
+
+    if(
+            fabs(motor->getPoint(motor->length*0.5)[2])>Constants::THICKNESS*0.5 &&
+                    fabs(motor->getPoint(-motor->length*0.5)[2])>Constants::THICKNESS*0.5
+            ){
+
+        motor->unbind(MyosinMotor::FRONT);
+        motor->unbind(MyosinMotor::BACK);
+        //model->placeBoundMyosinMotor(motor, this);
+    }
+}
+
+void MyosinMotorBinding::checkTime(int head, double dt){
+    if(motor->isBound(head)){
+        current_time[head] += dt;
+        if(current_time[head]>unbind_time[head]){
+            motor->unbind(head);
+        }
+    }
+}
+
+void MyosinMotorBinding::slideHead(int head, double dt) {
+    if(motor->isFree(head)) return;
+    binding_position[head] += sliding[head]*dt;
+
+    if(fabs(binding_position[head])>motor->getBound(head)->length*0.5) {
+        //unbind
+        motor->unbind(head);
+    }
 }
 
 void CrosslinkedFilaments::applyForces() {

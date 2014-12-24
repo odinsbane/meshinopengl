@@ -10,6 +10,7 @@
 #include <vector>
 #include <math.h>
 #include <random>
+#include <chrono>
 
 #ifdef GLFW_DISPLAY
   #include "Display.h"
@@ -39,6 +40,7 @@ int main(int argc, const char * argv[])
     }
 
     std::vector<MyosinMotor*> &myosins = sim.getMyosins();
+
     for(int i = 0; i<Constants::MYOSINS; i++){
         Rod* a = myosins[i];
         rods.push_back(a);
@@ -54,14 +56,18 @@ int main(int argc, const char * argv[])
 	std::cout<< "running\n";
 
     while(run){
-        
-        for(int i = 0; i<5; i++){
+        auto start = std::chrono::system_clock::now();
+        for(int i = 0; i<Constants::STEPS_PER_FRAME; i++){
 
             sim.step();
 
         }
-        steps++;
+        auto end = std::chrono::system_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        printf("step: %lld \n", elapsed);
 
+        steps++;
+        run = steps<=Constants::STEPS_PER_SIMULATE;
 
 #ifdef GLFW_DISPLAY
         if(updateGraphics()!=0) run = false;
