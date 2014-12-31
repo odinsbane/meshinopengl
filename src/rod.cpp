@@ -1,3 +1,4 @@
+#include <QtCore/qlist.h>
 #include "rod.h"
 
 double Line3D::distance(glm::dvec3 &center, glm::dvec3 &direction, double length, const glm::dvec3 &point) {
@@ -971,18 +972,21 @@ glm::dvec2 Rod::intersections(Rod &other){
 glm::dvec3 Rod::getPoint(double s) {
     return glm::dvec3(position[0] + direction[0]*s, position[1] + direction[1]*s, position[2] + direction[2]*s);
 }
-
+glm::dvec3 truncatedCrossProduct(glm::dvec3 &a, glm::dvec4 &b){
+    return glm::dvec3(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
+}
 double Rod::prepareForces(){
     std::lock_guard<std::mutex> lock(mutex);
 
     for(int i = 0; i<forces.size(); i++){
         glm::dvec4 f = *forces[i].get();
+        glm::dvec3 t = truncatedCrossProduct(direction, f);
         force[0] += f[0];
         force[1] += f[1];
         force[2] += f[2];
-        torque[0] += f[0]*f[3];
-        torque[1] += f[1]*f[3];
-        torque[2] += f[2]*f[3];
+        torque[0] += t[0]*f[3];
+        torque[1] += t[1]*f[3];
+        torque[2] += t[2]*f[3];
     }
 
     return glm::length(force) + glm::length(torque);

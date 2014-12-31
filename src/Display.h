@@ -24,6 +24,9 @@
 #include <iostream>
 #include <ctime>
 #include <string>
+#include <thread>
+
+
 
 class CylinderRepresentation{
 
@@ -89,6 +92,8 @@ private:
     int running = 0;
     CylinderRepresentation* repr;
     bool snapshot=false;
+    std::mutex mutex;
+    std::thread* worker;
 public:
     Display(int N);
     int initialize();
@@ -97,11 +102,14 @@ public:
     void shutdown();
     void startWriter();
     void takeSnapShot();
+    void graphicsLoop();
+    int getRunning();
     ~Display(){
         delete[] pixbuf;
     }
     void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
     void updateLights();
+
 };
 
 

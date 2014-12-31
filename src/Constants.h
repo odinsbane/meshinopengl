@@ -27,7 +27,7 @@ namespace Constants {
     const double MEMBRANE_REPULSION = 0.1; //constant force
     const double BOTTOM_BOUNDS = 0.56;
     //parameters
-    const double MYOSIN_LENGTH = 0.8; //300nm
+    const double MYOSIN_LENGTH = 1.0; //300nm
     const double MYOSIN_DIAMETER = 0.2; //50nm
     const double MYOSIN_ACTIVE_FORCE = 1;
     const double MYOSIN_ALPHA_S = 1;

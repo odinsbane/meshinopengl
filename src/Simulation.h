@@ -56,8 +56,8 @@ class Simulation{
         void twoFilamentTestCase();
         void seedCrosslinkerTestCase();
         void myosinMotorTestCase();
-
-    void seedMyosinMotorTestCase();
+        void seedMyosinAndCrosslinker();
+        void seedMyosinMotorTestCase();
 };
 
 #endif

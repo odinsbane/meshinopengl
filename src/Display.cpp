@@ -179,7 +179,6 @@ Display::Display(int rods){
 
 
 int Display::initialize(){
-    
     /*
      *Creating and initlizing a window on mac.
      *
@@ -324,7 +323,6 @@ int Display::initialize(){
     camera = new Camera(program);
 
     glfwSetKeyCallback(window, keyPressedStatic);
-
     return 0;
 }
 
@@ -339,7 +337,8 @@ float myosin_color[] = {0,0,1,1};
 float actin_color[] = {0.5,1,0.5,1};
 
 int Display::render(){
-        glUseProgram(program);
+    std::lock_guard<std::mutex> lock(mutex);
+    glUseProgram(program);
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
         int floats = repr->getFloatCount();
@@ -422,9 +421,22 @@ void Display::shutdown(){
 }
 
 void Display::updateRod(int index, Rod &rod){
+    std::lock_guard<std::mutex> lock(mutex);
     repr->updateRod(index, rod);
 }
 
+void Display::graphicsLoop(){
+
+    while(running==0){
+        render();
+    }
+}
+
+
+
+int Display::getRunning(){
+    return running;
+}
 
 void Display::takeSnapShot(){
     char* buf = new char[3*width*height];
@@ -587,7 +599,6 @@ glm::dvec3 sum(double a, glm::dvec3 &va, double b, glm::dvec3 &vb){
 
 }
 void MeshCylinder::updateRod(int index, Rod &rod) {
-
 
     //index times the number of floats for a rod.
     int start = index*element_node_count*3;

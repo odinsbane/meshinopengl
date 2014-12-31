@@ -19,6 +19,7 @@
 #include "rod.h"
 
 std::vector<Rod*> rods;
+Simulation sim;
 
 #ifdef GLFW_DISPLAY
     void initializeGraphics();
@@ -26,10 +27,11 @@ std::vector<Rod*> rods;
     Display* graphics;
 #endif
 
+
 int main(int argc, const char * argv[])
 {
     std::cout<< "initializing\n";
-    Simulation sim;
+
     sim.initialize();
 
 #ifdef GLFW_DISPLAY
@@ -49,35 +51,38 @@ int main(int argc, const char * argv[])
     printf("Rods loaded: %ld\n", rods.size());
     initializeGraphics();
 #endif
-    
-    bool run = true;
-    int steps = 0;
-	
-	std::cout<< "running\n";
+    std::thread main([](){
+        bool run = true;
+        int steps = 0;
 
-    while(run){
-        auto start = std::chrono::system_clock::now();
-        for(int i = 0; i<Constants::STEPS_PER_FRAME; i++){
+        std::cout<< "running\n";
 
-            sim.step();
+        while(run){
+            auto start = std::chrono::system_clock::now();
+            for(int i = 0; i<Constants::STEPS_PER_FRAME; i++){
+
+                sim.step();
+
+            }
+            auto end = std::chrono::system_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            printf("step: %lld \n", elapsed);
+
+            steps++;
+            run = steps<=Constants::STEPS_PER_SIMULATE;
+
+    #ifdef GLFW_DISPLAY
+            if(updateGraphics()!=0) run = false;
+    #else
+            display();
+            if(steps==10) run=false;
+    #endif
 
         }
-        auto end = std::chrono::system_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        printf("step: %lld \n", elapsed);
 
-        steps++;
-        run = steps<=Constants::STEPS_PER_SIMULATE;
-
-#ifdef GLFW_DISPLAY
-        if(updateGraphics()!=0) run = false;
-#else
-        display();
-        if(steps==10) run=false;
-#endif
-        
-    }
-
+    });
+    graphics->graphicsLoop();
+    main.join();
     #ifdef GLFW_DISPLAY
         graphics->shutdown();
     #endif
@@ -89,16 +94,17 @@ void initializeGraphics(){
     
     graphics = new Display(rods.size());
     graphics->initialize();
-
+    //graphics->startGraphicsLoop();
 }
 
 int updateGraphics(){
+    //graphics->render();
     int i = 0;
     for(auto itr = rods.begin(), end = rods.end(); itr!=end; itr++){
         Rod* b1 = *itr;
         graphics->updateRod(i, *b1);
         i++;
     }
-    return graphics->render();
+    return graphics->getRunning();
 }
 #endif

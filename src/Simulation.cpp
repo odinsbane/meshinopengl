@@ -363,18 +363,16 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-
-    //freeSeedActinFilaments();
+    /*
+    freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
-    //seedMyosinMotors();
+    seedMyosinMotors();
     printf("%ld myosin minifilaments\n", myosins.size());
 
-    //relax();
-
-    //seedCrosslinkers();
+    seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-
+    */
     printf("creating test case\n");
 
     createTestCase();
@@ -816,7 +814,59 @@ void Simulation::myosinMotorTestCase(){
     bindings.push_back(bind);
 
 }
+void Simulation::seedMyosinAndCrosslinker() {
 
+    ActinFilament* a = createNewFilament();
+    a->position[0] = -1.1;
+    a->position[1] = 0.0;
+    a->position[2] = 0;
+
+    a->direction[0] = 1.0;
+    a->direction[1] = 0;
+    a->direction[2] = 0;
+
+    ActinFilament* b = createNewFilament();
+    b->position[0] = 1.1;
+    b->position[1] = 0.0;
+    b->position[2] = 0;
+
+    b->direction[0] = -1;
+    b->direction[1] = 0;
+    b->direction[2] = 0;
+
+    MyosinMotor* motor = createNewMotor();
+    motor->position[0] = 0 ;
+    motor->position[1] = 0;
+    motor->position[2] = 0;
+    motor->direction[0] = 1;
+    motor->direction[1] = 0;
+    motor->direction[2] = 0;
+    motor->updateBounds();
+    MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
+    bind->setNumberGenerator(number_generator);
+
+    bind->bind(a, MyosinMotor::BACK, 0.3);
+    bind->bind(b, MyosinMotor::FRONT, 0.3);
+
+    actins.push_back(a);
+    actins.push_back(b);
+    crosslinkFilaments(a,b);
+
+    myosins.push_back(motor);
+    bindings.push_back(bind);
+
+    CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
+    x->filaments[0] = a;
+    x->locations[0] = 1.0;
+    x->filaments[1] = b;
+    x->locations[1] = 1.0;
+
+    a->bind(b);
+    b->bind(a);
+
+    x->unbind_time = 1e30;
+    xlinkers.push_back(x);
+}
 void Simulation::seedMyosinMotorTestCase(){
     ActinFilament* a = createNewFilament();
     a->position[0] = 0;
@@ -850,6 +900,7 @@ void Simulation::createTestCase() {
     //seedCrosslinkerTestCase();
     myosinMotorTestCase();
     //seedMyosinMotorTestCase();
+    //seedMyosinAndCrosslinker();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
