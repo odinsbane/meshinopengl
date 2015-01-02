@@ -989,6 +989,8 @@ double Rod::prepareForces(){
         torque[2] += t[2]*f[3];
     }
 
+    printf("%f,%f,%f\t%f,%f,%f\n", force[0], force[1], force[2], torque[0], torque[1], torque[2]);
+
     return glm::length(force) + glm::length(torque);
 }
 

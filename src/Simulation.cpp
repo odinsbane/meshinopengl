@@ -850,7 +850,6 @@ void Simulation::seedMyosinAndCrosslinker() {
 
     actins.push_back(a);
     actins.push_back(b);
-    crosslinkFilaments(a,b);
 
     myosins.push_back(motor);
     bindings.push_back(bind);
@@ -898,9 +897,9 @@ void Simulation::seedMyosinMotorTestCase(){
 
 void Simulation::createTestCase() {
     //seedCrosslinkerTestCase();
-    myosinMotorTestCase();
+    //myosinMotorTestCase();
     //seedMyosinMotorTestCase();
-    //seedMyosinAndCrosslinker();
+    seedMyosinAndCrosslinker();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
