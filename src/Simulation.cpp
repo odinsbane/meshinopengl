@@ -378,8 +378,8 @@ void Simulation::initialize(){
     createTestCase();
     printf("preparing relax space\n");
     prepareRelaxSpace();
-    printf("relaxing");
-    relax();
+    //printf("relaxing");
+    //relax();
     printf("finished initialization\n");
 }
 
@@ -559,13 +559,11 @@ void Simulation::partialUpdate(double dt){
     for(ActinFilament* rod : actins){
         rod->update(dt);
         rod->clearForces();
-        rod->updateBounds();
     }
 
     for(MyosinMotor* rod : myosins){
         rod->update(dt);
         rod->clearForces();
-        rod->updateBounds();
     }
 }
 
@@ -623,8 +621,9 @@ void Simulation::relax(){
     double err, out_of_eq;
     while(!relaxed) {
         do {
+            printf("current dt: %e", working_dt);
             copyPositions(0);
-
+            printf("first:\n");
             //create k1/h
             out_of_eq = prepareForces();
             copyForces(0);
@@ -634,6 +633,7 @@ void Simulation::relax(){
             prepareForUpdate(1, {0.25});
             //set the position to yk + 1/4k1
             partialUpdate(working_dt);
+            printf("second:\n");
             //prepare k2
             prepareForces();
             copyForces(1);
@@ -643,6 +643,7 @@ void Simulation::relax(){
             //y = y0 + 3/32 k1 + 9/32 k2
             prepareForUpdate(2, {3.0 / 32.0, 9.0 / 32.0});
             partialUpdate(working_dt);
+            printf("third:\n");
             //k3
             prepareForces();
             copyForces(2);
@@ -652,6 +653,7 @@ void Simulation::relax(){
             prepareForUpdate(3, {1932.0 / 2197.0, -7200.0 / 2197.0, 7296.0 / 2197.0});
             //y = y0 + 1932/2197 k1 - 7200/2197 k2 + 7296/2197 k3
             partialUpdate(working_dt);
+            printf("fourth:\n");
             //k4
             prepareForces();
             copyForces(3);
@@ -661,6 +663,7 @@ void Simulation::relax(){
             prepareForUpdate(4, {439.0 / 216.0, -8, 3680.0 / 513.0, -845.0 / 4104.0});
             //y = y0 + 439/216 k1 - 8 k2 + 3680/513 k3 - 845/4104 k4
             partialUpdate(working_dt);
+            printf("fifth:\n");
             //k5
             prepareForces();
             copyForces(4);
@@ -671,6 +674,7 @@ void Simulation::relax(){
             prepareForUpdate(5, {-8.0 / 27.0, 2, -3544.0 / 2565.0, 1859.0 / 4104.0, -11.0 / 40.0});
             //y =y0 -8/27 k1 + 2 k2 - 3544/2565 k3 + 1859/4104 k4 - 11/40 k5
             partialUpdate(working_dt);
+            printf("sixth:\n");
             //k6 prepareForces();
             prepareForces();
             copyForces(5);
@@ -721,7 +725,7 @@ void Simulation::relax(){
 }
 
 void Simulation::updateInteractions(double dt){
-
+    prepareForces();
     for( auto g = xlinkers.begin(); g!=xlinkers.end(); g++){
         CrosslinkedFilaments* xf = *g;
         xf->update(dt);
@@ -734,6 +738,7 @@ void Simulation::updateInteractions(double dt){
     for(MyosinMotorBinding* binding: bindings){
         binding->update(dt);
     }
+    clearForces();
 }
 
 double step_dt = 0;

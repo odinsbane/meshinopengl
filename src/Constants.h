@@ -32,7 +32,7 @@ namespace Constants {
     const double MYOSIN_ACTIVE_FORCE = 1;
     const double MYOSIN_ALPHA_S = 1;
     const double MYOSIN_ALPHA = 1;
-    const double K_m = 1.0;
+    const double K_m = 100.0;
     const double MYOSIN_BIND_LENGTH = 0.2;
     const double MYOSIN_BINDING_TIME = 10e32;
     const double MYOSIN_BIND_PROBABILITY = 0.1;

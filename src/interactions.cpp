@@ -65,6 +65,7 @@ void MyosinMotorBinding::headForce(int head){
 
     glm::dvec4* filament_force = new glm::dvec4(-(*head_force)[0], -(*head_force)[1], -(*head_force)[2], binding_position[head]);
     filament->applyForce(filament_force);
+
 }
 
 void MyosinMotorBinding::update(double dt){
@@ -120,6 +121,7 @@ void MyosinMotorBinding::slideHead(int head, double dt) {
         //unbind
         motor->unbind(head);
     }
+    printf("slide: %16.16e \n", sliding[head]*dt);
 }
 
 void CrosslinkedFilaments::applyForces() {
