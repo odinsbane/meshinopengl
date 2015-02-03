@@ -363,7 +363,6 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-    /*
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -372,10 +371,10 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-    */
+
     printf("creating test case\n");
 
-    createTestCase();
+    //createTestCase();
     printf("preparing relax space\n");
     prepareRelaxSpace();
     //printf("relaxing");
@@ -621,9 +620,9 @@ void Simulation::relax(){
     double err, out_of_eq;
     while(!relaxed) {
         do {
-            printf("current dt: %e", working_dt);
+            //printf("current dt: %e", working_dt);
             copyPositions(0);
-            printf("first:\n");
+            //printf("first:\n");
             //create k1/h
             out_of_eq = prepareForces();
             copyForces(0);
@@ -633,7 +632,7 @@ void Simulation::relax(){
             prepareForUpdate(1, {0.25});
             //set the position to yk + 1/4k1
             partialUpdate(working_dt);
-            printf("second:\n");
+            //printf("second:\n");
             //prepare k2
             prepareForces();
             copyForces(1);
@@ -643,7 +642,7 @@ void Simulation::relax(){
             //y = y0 + 3/32 k1 + 9/32 k2
             prepareForUpdate(2, {3.0 / 32.0, 9.0 / 32.0});
             partialUpdate(working_dt);
-            printf("third:\n");
+            //printf("third:\n");
             //k3
             prepareForces();
             copyForces(2);
@@ -653,7 +652,7 @@ void Simulation::relax(){
             prepareForUpdate(3, {1932.0 / 2197.0, -7200.0 / 2197.0, 7296.0 / 2197.0});
             //y = y0 + 1932/2197 k1 - 7200/2197 k2 + 7296/2197 k3
             partialUpdate(working_dt);
-            printf("fourth:\n");
+            //printf("fourth:\n");
             //k4
             prepareForces();
             copyForces(3);
@@ -663,7 +662,7 @@ void Simulation::relax(){
             prepareForUpdate(4, {439.0 / 216.0, -8, 3680.0 / 513.0, -845.0 / 4104.0});
             //y = y0 + 439/216 k1 - 8 k2 + 3680/513 k3 - 845/4104 k4
             partialUpdate(working_dt);
-            printf("fifth:\n");
+            //printf("fifth:\n");
             //k5
             prepareForces();
             copyForces(4);
@@ -674,7 +673,7 @@ void Simulation::relax(){
             prepareForUpdate(5, {-8.0 / 27.0, 2, -3544.0 / 2565.0, 1859.0 / 4104.0, -11.0 / 40.0});
             //y =y0 -8/27 k1 + 2 k2 - 3544/2565 k3 + 1859/4104 k4 - 11/40 k5
             partialUpdate(working_dt);
-            printf("sixth:\n");
+            //printf("sixth:\n");
             //k6 prepareForces();
             prepareForces();
             copyForces(5);
@@ -717,7 +716,7 @@ void Simulation::relax(){
         relaxed = out_of_eq<Constants::RELAXATION_LIMIT;
         stepped++;
         if(stepped>Constants::SUB_STEPS){
-            printf("break\n");
+            //printf("break\n");
             break;
         }
     }
@@ -967,4 +966,8 @@ void Simulation::twoFilamentTestCase() {
     xlinkers.push_back(x);
 
 
+}
+
+std::vector<CrosslinkedFilaments *> &Simulation::getCrosslinkedFilaments() {
+    return xlinkers;
 }

@@ -121,7 +121,7 @@ void MyosinMotorBinding::slideHead(int head, double dt) {
         //unbind
         motor->unbind(head);
     }
-    printf("slide: %16.16e \n", sliding[head]*dt);
+    //printf("slide: %16.16e \n", sliding[head]*dt);
 }
 
 void CrosslinkedFilaments::applyForces() {

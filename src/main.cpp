@@ -11,6 +11,8 @@
 #include <math.h>
 #include <random>
 #include <chrono>
+#include <QtCore/qlist.h>
+#include <QtGui/qpolygon.h>
 
 #ifdef GLFW_DISPLAY
   #include "Display.h"
@@ -105,6 +107,20 @@ int updateGraphics(){
         graphics->updateRod(i, *b1);
         i++;
     }
+
+    int springs = 0;
+    std::vector<CrosslinkedFilaments*> &linked = sim.getCrosslinkedFilaments();
+    printf("%lld\n", linked.size());
+    graphics->setSpringCount(linked.size());
+    for(int i = 0; i<linked.size(); i++){
+        CrosslinkedFilaments* x = linked[i];
+        glm::dvec3 a = x->filaments[0]->getPoint(x->locations[0]);
+        glm::dvec3 b = x->filaments[1]->getPoint(x->locations[1]);
+        glm::dvec3 c = sim.getReflectedPoint(a, b);
+        graphics->updateSpring(i, a, c);
+
+    }
+
     return graphics->getRunning();
 }
 #endif

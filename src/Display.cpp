@@ -9,6 +9,9 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
+#include <QtCore/qlist.h>
+#include <QtGui/qpolygon.h>
+#include <Qt3Support/q3cstring.h>
 
 
 bool shaderStatus(GLuint &shader);
@@ -159,6 +162,27 @@ void RectangularPrism::updateRod(int index, Rod &rod){
     }*/
 }
 
+SpringRepresentation::SpringRepresentation(){
+    floats = 6;
+}
+
+void SpringRepresentation::updateRepresentation(int index, float *positions, glm::dvec3 &a, glm::dvec3 &b) {
+
+    int offset = index*floats;
+    positions[offset + 0] = a[0];
+    positions[offset + 1] = a[1];
+    positions[offset + 2] = a[2];
+    positions[offset + 3] = b[0];
+    positions[offset + 4] = b[1];
+    positions[offset + 5] = b[2];
+
+}
+
+int SpringRepresentation::getFloatCount(){
+    return floats;
+}
+
+
 Display* main_display;
 void keyPressedStatic(GLFWwindow* window, int key, int scancode, int action, int mods){
     main_display->keyPressed(window, key, scancode, action, mods);
@@ -171,6 +195,12 @@ Display::Display(int rods){
 
     positions = new float[floats];
     repr->setPositions(positions);
+
+    max_springs = 100;
+    current_springs = 0;
+    spring_repr = new SpringRepresentation();
+    spring_positions = new float[max_springs*spring_repr->getFloatCount()];
+
 
     N = rods;
     main_display=this;
@@ -316,6 +346,22 @@ int Display::initialize(){
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
+
+    glGenVertexArrays(1, &vao2);
+    glBindVertexArray(vao2);
+
+
+    glGenBuffers(1, &springPositionBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, springPositionBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*spring_repr->getFloatCount()*max_springs,spring_positions, GL_STREAM_DRAW);
+
+    glEnableVertexAttribArray(posIndex);
+    glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+
     glUseProgram(0);
     
     GetError();
@@ -335,6 +381,7 @@ void Display::startWriter(){
 
 float myosin_color[] = {0,0,1,1};
 float actin_color[] = {0.5,1,0.5,1};
+float linker_color[] = {1,1,1,1};
 
 int Display::render(){
     std::lock_guard<std::mutex> lock(mutex);
@@ -359,6 +406,9 @@ int Display::render(){
         GLint shift_loc = glGetUniformLocation(program, "shift");
         GLint color_loc = glGetUniformLocation(program, "color");
         GLint trans_loc = glGetUniformLocation(program, "transparency");
+        GLint mode_loc = glGetUniformLocation(program, "colorMode");
+
+
         float* shift = new float[3];
         shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
         for(int i=0; i<3; i++) {
@@ -372,7 +422,7 @@ int Display::render(){
                 } else{
                     glUniform1f(trans_loc, 0.25);
                  }
-
+                glUniform1i(mode_loc, 0);
                 glUniform4fv(color_loc, 1, actin_color);
 
                 int actin_nodes = Constants::ACTINS * repr->getElementNodeCount();
@@ -387,7 +437,39 @@ int Display::render(){
                 }
             }
         }
+
+
+
         glBindVertexArray(0);
+
+        if(current_springs>0) {
+
+            glBindBuffer(GL_ARRAY_BUFFER, springPositionBufferObject);
+
+            int spring_floats = spring_repr->getFloatCount() * max_springs;
+            if(current_springs<=max_springs) {
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
+            } else{
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
+                //max_springs = current_springs;
+                //glBufferData(GL_ARRAY_BUFFER, sizeof(float)*spring_repr->getFloatCount()*max_springs,spring_positions, GL_STREAM_DRAW);
+            }
+            glBindVertexArray(vao2);
+            shift[0] = 0;
+            shift[1] = 0;
+            shift[2] = 0;
+            shift[3] = 0;
+
+            glUniform4fv(color_loc, 1, linker_color);
+            glUniform3fv(shift_loc, 1, shift);
+            glUniform1f(trans_loc, 1.0);
+            glUniform1i(mode_loc, 1);
+
+            glDrawArrays(GL_LINES, 0, spring_floats);
+
+            glBindVertexArray(0);
+        }
+
         glUseProgram(0);
 
         /* Swap front and back buffers */
@@ -410,7 +492,9 @@ int Display::render(){
             takeSnapShot();
 
         }
-        return running;
+    delete shift;
+
+    return running;
     
 
 }
@@ -421,8 +505,18 @@ void Display::shutdown(){
 }
 
 void Display::updateRod(int index, Rod &rod){
-    std::lock_guard<std::mutex> lock(mutex);
+    //std::lock_guard<std::mutex> lock(mutex);
     repr->updateRod(index, rod);
+}
+
+void Display::setSpringCount(int s) {
+    if(s>max_springs){
+        std::lock_guard<std::mutex> lock(mutex);
+        delete spring_positions;
+        spring_positions = new float[spring_repr->getFloatCount()*s];
+    }
+
+    current_springs = s;
 }
 
 void Display::graphicsLoop(){
@@ -654,3 +748,10 @@ void MeshCylinder::updateRod(int index, Rod &rod) {
 
 }
 
+
+void Display::updateSpring(int index, glm::dvec3 &a, glm::dvec3 &b) {
+    if(index>current_springs){
+        printf("broken!\n");
+    }
+    spring_repr->updateRepresentation(index, spring_positions, a, b);
+}

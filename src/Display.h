@@ -72,16 +72,34 @@ class MeshCylinder : public CylinderRepresentation{
 
     };
 
+class SpringRepresentation{
+    int divisions, floats;
+
+public:
+    SpringRepresentation();
+    void updateRepresentation(int index, float* positions, glm::dvec3 &a, glm::dvec3 &b);
+    int getFloatCount();
+};
+
 class Display{
 private:
     GLFWwindow* window;
 
     float* positions;
+
+    float* spring_positions;
+    int max_springs;
+    int current_springs;
+    int to_set;
+
     int N;
 
     GLuint program;
     GLuint vao;
+    GLuint vao2;
     GLuint positionBufferObject;
+    GLuint springPositionBufferObject;
+
     TiffWriter* writer;
     char* pixbuf;
     int height = 300;
@@ -91,13 +109,15 @@ private:
     Camera* camera;
     int running = 0;
     CylinderRepresentation* repr;
+    SpringRepresentation* spring_repr;
     bool snapshot=false;
     std::mutex mutex;
-    std::thread* worker;
 public:
     Display(int N);
     int initialize();
     void updateRod(int index, Rod &rod);
+    void updateSpring(int index, glm::dvec3 &a, glm::dvec3 &b);
+    void setSpringCount(int s);
     int render();
     void shutdown();
     void startWriter();

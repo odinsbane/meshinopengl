@@ -988,7 +988,7 @@ double Rod::prepareForces(){
         torque[1] += t[1]*f[3];
         torque[2] += t[2]*f[3];
     }
-    printf("cum: %15.15e,%15.15e\n", glm::length(force), glm::length(torque));
+    //printf("cum: %15.15e,%15.15e\n", glm::length(force), glm::length(torque));
     //printf("%e,%e,%e\t%e,%e,%e\n", force[0], force[1], force[2], torque[0], torque[1], torque[2]);
 
     return glm::length(force) + glm::length(torque);
@@ -996,11 +996,11 @@ double Rod::prepareForces(){
 
 double Rod::update(double dt){
     double force_long = glm::dot(force, direction);
-    printf("before %15.15e\t", position[0]);
+    //printf("before %15.15e\t", position[0]);
     position[0] = position[0] + dt*(force_long*direction[0]/alpha_longitudinal + (force[0] - force_long*direction[0])/alpha_perpendicular);
     position[1] = position[1] + dt*(force_long*direction[1]/alpha_longitudinal + (force[1] - force_long*direction[1])/alpha_perpendicular);
     position[2] = position[2] + dt*(force_long*direction[2]/alpha_longitudinal + (force[2] - force_long*direction[2])/alpha_perpendicular);
-    printf("after: %15.15e\n", position[0]);
+    //printf("after: %15.15e\n", position[0]);
     double T = glm::length(torque);
 
     if(T>0) {

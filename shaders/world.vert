@@ -20,6 +20,7 @@ uniform vec4 color;
 
 uniform vec3 shift;
 
+uniform int colorMode;
 
 void main() {
 
@@ -28,9 +29,13 @@ void main() {
 
         gl_Position = perspectiveMatrix*camPosition;
 
-        vec3 dirToLight = normalize(lightPos - vec3(position));
+        if(colorMode==0){
+            vec3 dirToLight = normalize(lightPos - vec3(position));
+            float cosAngIncidence = dot(normal, dirToLight)*0.5 + 0.5;
+            meshColor = (color* lightIntensity*cosAngIncidence ) + color * ambientIntensity;
+        }else{
 
-        float cosAngIncidence = dot(normal, dirToLight)*0.5 + 0.5;
+            meshColor = color;
 
-        meshColor = (color* lightIntensity*cosAngIncidence ) + color * ambientIntensity;
+        }
 }

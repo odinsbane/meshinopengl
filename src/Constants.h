@@ -9,17 +9,17 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 2;
-    const int MYOSINS = 1;
+    const int ACTINS = 100;
+    const int MYOSINS = 10;
 
     //simulation
-    const double DT = 1e-5;
+    const double DT = 1e-3;
     const double WIDTH = 6.4;
     const double SEED_WIDTH=6.4;
     const double THICKNESS = 0.56;
     const double STEPS_PER_SIMULATE=1000;
     const double STEPS_PER_FRAME=5e2;
-    const double SUB_STEPS=10000;
+    const double SUB_STEPS=1;
     const double RELAXATION_LIMIT = 5e-1;
     const double ERROR_THRESHOLD = 1e-5;
     const double REPULSION=0;  //spring type force.

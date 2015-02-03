@@ -38,7 +38,6 @@ class Simulation{
     void partialUpdate(double dt);
     void updateInteractions(double dt);
     double calculateError();
-    glm::dvec3 getReflectedPoint(glm::dvec3 &a, glm::dvec3 &b);
     void applyMembraneForce(Rod* fil);
     public:
         Simulation(){ number_generator = new FRandom();}
@@ -46,7 +45,7 @@ class Simulation{
         void step();
         std::vector<ActinFilament*> &getActins();
         std::vector<MyosinMotor*> &getMyosins();
-
+        std::vector<CrosslinkedFilaments*> &getCrosslinkedFilaments();
         void seedCrosslinkers();
         double getReflectedApproach(Rod *a, Rod *b);
         double reflectedCollision(Rod *other, Rod *filament);
@@ -58,6 +57,8 @@ class Simulation{
         void myosinMotorTestCase();
         void seedMyosinAndCrosslinker();
         void seedMyosinMotorTestCase();
+        glm::dvec3 getReflectedPoint(glm::dvec3 &a, glm::dvec3 &b);
+
 };
 
 #endif
