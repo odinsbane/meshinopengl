@@ -38,6 +38,8 @@ class MyosinMotorBinding{
         void update(double dt);
         void checkTime(int head, double dt);
         void slideHead(int head, double dt);
+        glm::dvec3 getBindingPosition(int head);
+        glm::dvec3 getHeadPosition(int head);
 
 };
 

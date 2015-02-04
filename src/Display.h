@@ -73,7 +73,10 @@ class MeshCylinder : public CylinderRepresentation{
     };
 
 class SpringRepresentation{
-    int divisions, floats;
+    int floats;
+    int rings = 10;
+    int subdivisions = 20;
+    double radius = 0.1;
 
 public:
     SpringRepresentation();

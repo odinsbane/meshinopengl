@@ -1,3 +1,4 @@
+#include <Qt3Support/q3cstring.h>
 #include "interactions.h"
 
 glm::dvec3 getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target) {
@@ -159,4 +160,22 @@ void CrosslinkedFilaments::unbind() {
 
 bool CrosslinkedFilaments::finished(){
     return finito;
+}
+
+glm::dvec3 MyosinMotorBinding::getBindingPosition(int head) {
+    if(motor->isBound(head)){
+        return motor->getBound(head)->getPoint(binding_position[0]);
+    } else{
+        double s = 0.5*motor->length - Constants::MYOSIN_BIND_LENGTH;
+        if(head==MyosinMotor::BACK) s = -s;
+        return motor->getPoint(s);
+    }
+
+
+}
+
+glm::dvec3 MyosinMotorBinding::getHeadPosition(int head) {
+    double s = 0.5*motor->length;
+    if(head==MyosinMotor::BACK) s = -s;
+    return motor->getPoint(s);
 }

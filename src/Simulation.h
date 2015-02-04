@@ -46,6 +46,7 @@ class Simulation{
         std::vector<ActinFilament*> &getActins();
         std::vector<MyosinMotor*> &getMyosins();
         std::vector<CrosslinkedFilaments*> &getCrosslinkedFilaments();
+        std::vector<MyosinMotorBinding*> &getMyosinMotorBindings();
         void seedCrosslinkers();
         double getReflectedApproach(Rod *a, Rod *b);
         double reflectedCollision(Rod *other, Rod *filament);

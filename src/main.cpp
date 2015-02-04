@@ -110,16 +110,41 @@ int updateGraphics(){
 
     int springs = 0;
     std::vector<CrosslinkedFilaments*> &linked = sim.getCrosslinkedFilaments();
-    printf("%lld\n", linked.size());
-    graphics->setSpringCount(linked.size());
-    for(int i = 0; i<linked.size(); i++){
-        CrosslinkedFilaments* x = linked[i];
-        glm::dvec3 a = x->filaments[0]->getPoint(x->locations[0]);
-        glm::dvec3 b = x->filaments[1]->getPoint(x->locations[1]);
-        glm::dvec3 c = sim.getReflectedPoint(a, b);
-        graphics->updateSpring(i, a, c);
+    std::vector<MyosinMotorBinding*> &bindings = sim.getMyosinMotorBindings();
+    graphics->setSpringCount(linked.size() + 2*bindings.size());
+    int index = 0;
+    glm::dvec3 a,b,c;
+    for(CrosslinkedFilaments* x: linked){
+        a = x->filaments[0]->getPoint(x->locations[0]);
+        b = x->filaments[1]->getPoint(x->locations[1]);
+        c = sim.getReflectedPoint(a, b);
+        graphics->updateSpring(index, a, c);
+        index++;
 
     }
+    int h;
+    for(MyosinMotorBinding* bind: bindings){
+        h = MyosinMotor::FRONT;
+
+        a = bind->getHeadPosition(h);
+        b = bind->getBindingPosition(h);
+        c = sim.getReflectedPoint(a,b);
+        graphics->updateSpring(index, a, c);
+        index++;
+
+        h = MyosinMotor::BACK;
+
+        a = bind->getHeadPosition(h);
+        b = bind->getBindingPosition(h);
+        c = sim.getReflectedPoint(a,b);
+        graphics->updateSpring(index, a, c);
+        index++;
+
+
+
+    }
+
+
 
     return graphics->getRunning();
 }

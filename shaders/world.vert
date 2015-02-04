@@ -13,6 +13,7 @@ uniform vec3 lightPos;
 uniform vec4 lightIntensity;
 uniform vec4 ambientIntensity;
 
+smooth out float incidenceCos;
 smooth out vec4 meshColor;
 smooth out vec3 planePosition;
 
@@ -31,11 +32,12 @@ void main() {
 
         if(colorMode==0){
             vec3 dirToLight = normalize(lightPos - vec3(position));
-            float cosAngIncidence = dot(normal, dirToLight)*0.5 + 0.5;
-            meshColor = (color* lightIntensity*cosAngIncidence ) + color * ambientIntensity;
+            incidenceCos = dot(normal, dirToLight);
+
         }else{
-
-            meshColor = color;
-
+            incidenceCos = -2;
         }
+
+        meshColor = color;
+
 }

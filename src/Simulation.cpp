@@ -371,10 +371,10 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-
+    /*
     printf("creating test case\n");
-
-    //createTestCase();
+    createTestCase();
+    */
     printf("preparing relax space\n");
     prepareRelaxSpace();
     //printf("relaxing");
@@ -822,7 +822,7 @@ void Simulation::seedMyosinAndCrosslinker() {
 
     ActinFilament* a = createNewFilament();
     a->position[0] = -1.1;
-    a->position[1] = 0.0;
+    a->position[1] = 0.1;
     a->position[2] = 0;
 
     a->direction[0] = 1.0;
@@ -831,7 +831,7 @@ void Simulation::seedMyosinAndCrosslinker() {
 
     ActinFilament* b = createNewFilament();
     b->position[0] = 1.1;
-    b->position[1] = 0.0;
+    b->position[1] = 0.1;
     b->position[2] = 0;
 
     b->direction[0] = -1;
@@ -840,7 +840,7 @@ void Simulation::seedMyosinAndCrosslinker() {
 
     MyosinMotor* motor = createNewMotor();
     motor->position[0] = 0 ;
-    motor->position[1] = 0;
+    motor->position[1] = -1;
     motor->position[2] = 0;
     motor->direction[0] = 1;
     motor->direction[1] = 0;
@@ -970,4 +970,8 @@ void Simulation::twoFilamentTestCase() {
 
 std::vector<CrosslinkedFilaments *> &Simulation::getCrosslinkedFilaments() {
     return xlinkers;
+}
+
+std::vector<MyosinMotorBinding *> &Simulation::getMyosinMotorBindings() {
+    return bindings;
 }
