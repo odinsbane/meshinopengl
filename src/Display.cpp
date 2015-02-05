@@ -223,6 +223,18 @@ void keyPressedStatic(GLFWwindow* window, int key, int scancode, int action, int
     main_display->keyPressed(window, key, scancode, action, mods);
 };
 
+void mousePressedStatic(GLFWwindow* window, int button, int action, int mods){
+    if(action==GLFW_PRESS) {
+        main_display->mousePressed(window, button, mods);
+    } else{
+        main_display->mouseReleased(window, button, mods);
+    }
+}
+
+void mouseMovedStatic(GLFWwindow* window, double x, double y){
+    main_display->mouseMoved(window, x, y);
+}
+
 Display::Display(int rods){
     //repr = new RectangularPrism(rods);
     repr = new MeshCylinder(rods, 16);
@@ -264,7 +276,7 @@ int Display::initialize(){
 #endif
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(400, 300, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -404,6 +416,8 @@ int Display::initialize(){
     camera = new Camera(program);
 
     glfwSetKeyCallback(window, keyPressedStatic);
+    glfwSetMouseButtonCallback(window, mousePressedStatic);
+    glfwSetCursorPosCallback(window, mouseMovedStatic);
     return 0;
 }
 
@@ -592,16 +606,19 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
     if(true){
         switch(key){
             case GLFW_KEY_LEFT:
-                camera->rotate(-0.01f, 0);
+                //camera->rotate(-0.01f, 0);
+                camera->pan(0.1, 0);
                 break;
             case GLFW_KEY_RIGHT:
-                camera->rotate(0.01f,0);
+                camera->pan(-0.1, 0);
+                //camera->rotate(0.01f,0);
                 break;
             case GLFW_KEY_UP:
-                camera->rotate(0, 0.01f);
+                //camera->rotate(0, 0.01f);
+                camera->pan(0, -0.1);
                 break;
             case GLFW_KEY_DOWN:
-                camera->rotate(0, -0.01f);
+                camera->pan(0, 0.1f);
                 break;
             case GLFW_KEY_Z:
                 camera->zoom(0.1f);
@@ -789,4 +806,27 @@ void Display::updateSpring(int index, glm::dvec3 &a, glm::dvec3 &b) {
         printf("broken!\n");
     }
     spring_repr->updateRepresentation(index, spring_positions, a, b);
+}
+
+void Display::mousePressed(GLFWwindow *window, int button, int mod) {
+    if(button==GLFW_MOUSE_BUTTON_LEFT){
+        dragging=true;
+        glfwGetCursorPos(window, &cursor_x, &cursor_y);
+    }
+}
+
+void Display::mouseReleased(GLFWwindow *window, int button, int mod) {
+    if(button==GLFW_MOUSE_BUTTON_LEFT){
+        dragging=false;
+    }
+}
+
+void Display::mouseMoved(GLFWwindow *window, double x, double y){
+    if(dragging){
+        double delta_x = x - cursor_x;
+        double delta_y = y - cursor_y;
+        camera->rotate((float)(delta_x*RATE), (float)(delta_y*RATE));
+        cursor_x = x;
+        cursor_y = y;
+    }
 }

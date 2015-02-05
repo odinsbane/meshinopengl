@@ -103,6 +103,9 @@ private:
     GLuint positionBufferObject;
     GLuint springPositionBufferObject;
 
+    bool dragging = false;
+    double cursor_x, cursor_y;
+
     TiffWriter* writer;
     char* pixbuf;
     int height = 300;
@@ -131,8 +134,11 @@ public:
         delete[] pixbuf;
     }
     void keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void mousePressed(GLFWwindow* window, int button, int mod);
+    void mouseReleased(GLFWwindow* window, int button, int mod);
+    void mouseMoved(GLFWwindow* window, double x, double y);
     void updateLights();
-
+    double RATE = 0.001;
 };
 
 

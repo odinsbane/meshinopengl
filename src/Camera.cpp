@@ -2,6 +2,8 @@
 #include "error.h"
 #include "stdio.h"
 #include <math.h>
+
+
 Camera::Camera(GLuint &program){
     theProgram = program;
     aspect = 1.0f;
@@ -10,6 +12,7 @@ Camera::Camera(GLuint &program){
     xx = new float[4];
     yy = new float[4];
     zz = new float[4];
+    location = new float[3]{0, 0, 0};
 
     r = 5;
     for(int i = 0; i<4; i++){
@@ -50,11 +53,11 @@ void Camera::setPosition(){
     yy[1] = r;
     zz[2] = r;
 
-    x = -multiplyMatrixVector4(orientationMatrix,xx)[2];
-    y = -multiplyMatrixVector4(orientationMatrix,yy)[2];
-    z = -multiplyMatrixVector4(orientationMatrix,zz)[2];
+    x = -multiplyMatrixVector4(orientationMatrix,xx)[2] + location[0];
+    y = -multiplyMatrixVector4(orientationMatrix,yy)[2] + location[1];
+    z = -multiplyMatrixVector4(orientationMatrix,zz)[2] + location[2];
 
-    GLuint cam_offset = glGetUniformLocation(theProgram, "cam_offset");
+    GLuint cam_offset = glGetUniformLocation(theProgram, "camOffset");
     glUseProgram(theProgram);
     glUniform3f(cam_offset, x, y, z);
     glUseProgram(0);    
@@ -138,6 +141,23 @@ void Camera::rotate(float dtheta, float dphi){
         
     }
     updatePosition();
+}
+
+void Camera::pan(float dx, float dy){
+
+    location[0] += orientationMatrix[0]*dx + -orientationMatrix[4]*dy;
+    location[1] += -orientationMatrix[1]*dx + orientationMatrix[5]*dy;
+    location[2] += -orientationMatrix[2]*dx + -orientationMatrix[6]*dy;
+
+    printf("%f %f %f\n", orientationMatrix[0], orientationMatrix[1], orientationMatrix[2]);
+    printf("%f %f %f\n", orientationMatrix[4], orientationMatrix[5], orientationMatrix[6]);
+    printf("%f %f %f\n", orientationMatrix[8], orientationMatrix[9], orientationMatrix[10]);
+    //printf("%f %f %f \n", location[0], location[1], location[2]);
+
+    GLuint offsetUniform = glGetUniformLocation(theProgram, "camOffset");
+
+    setPosition();
+
 }
 
 void Camera::rotate(float* quat){

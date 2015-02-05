@@ -29,7 +29,7 @@ class Camera {
     float* light_position;
     float* ambient_light;
     float* light_intensity;
-    
+    float* location;
     public:
     
         Camera(GLuint &program);
@@ -37,6 +37,7 @@ class Camera {
         void rotate(float dtheta, float dphi);
         void setPerspectiveMatrix();
         void zoom(double dr);
+        void pan(float dx, float dy);
         void updatePosition();
         void updateLights();
 

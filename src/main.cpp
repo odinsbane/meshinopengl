@@ -52,6 +52,7 @@ int main(int argc, const char * argv[])
 
     printf("Rods loaded: %ld\n", rods.size());
     initializeGraphics();
+    updateGraphics();
 #endif
     std::thread main([](){
         bool run = true;
