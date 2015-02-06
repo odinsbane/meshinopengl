@@ -9,8 +9,8 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 400;
-    const int MYOSINS = 0;
+    const int ACTINS = 4;
+    const int MYOSINS = 1;
 
     //simulation
     const double DT = 1e-5;
@@ -35,8 +35,8 @@ namespace Constants {
     const double K_m = 100.0;
     const double MYOSIN_BIND_LENGTH = 0.2;
     const double MYOSIN_BINDING_TIME = 10e32;
-    const double MYOSIN_BIND_PROBABILITY = 0.1;
-    const double MYOSIN_DIFFUSION_FORCE = 0;
+    const double MYOSIN_BIND_PROBABILITY = 0.9;
+    const double MYOSIN_DIFFUSION_FORCE = 100;
 
     const double ACTIN_LENGTH = 2.0;  //500 nm.
     const double ACTIN_DIAMETER = 0.032;//8 nm.

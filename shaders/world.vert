@@ -7,15 +7,14 @@ in vec3 normal;
 uniform vec3 camOffset;
 uniform mat4 perspectiveMatrix;
 uniform mat4 orientationMatrix;
-//uniform mat3 normalModelToCameraMatrix;
+uniform mat3 normalModelToCameraMatrix;
 
-uniform vec3 lightPos;
-uniform vec4 lightIntensity;
-uniform vec4 ambientIntensity;
 
-smooth out float incidenceCos;
 smooth out vec4 meshColor;
-smooth out vec3 planePosition;
+smooth out vec3 norm;
+smooth out vec3 pos;
+
+out float mode;
 
 uniform vec4 color;
 
@@ -31,11 +30,15 @@ void main() {
         gl_Position = perspectiveMatrix*camPosition;
 
         if(colorMode==0){
-            vec3 dirToLight = normalize(lightPos - vec3(position));
-            incidenceCos = dot(normal, dirToLight);
+            mode = 0;
+            //norm = normalize(normalModelToCameraMatrix*normal);
+            pos = position;
+            norm = normal;
 
         }else{
-            incidenceCos = -2;
+            mode=1;
+            norm = normal;
+            pos = position;
         }
 
         meshColor = color;
