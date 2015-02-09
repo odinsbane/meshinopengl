@@ -11,8 +11,6 @@
 #include <math.h>
 #include <random>
 #include <chrono>
-#include <QtCore/qlist.h>
-#include <QtGui/qpolygon.h>
 
 #ifdef GLFW_DISPLAY
   #include "Display.h"

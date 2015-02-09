@@ -9,9 +9,6 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
-#include <QtCore/qlist.h>
-#include <QtGui/qpolygon.h>
-#include <Qt3Support/q3cstring.h>
 
 
 bool shaderStatus(GLuint &shader);

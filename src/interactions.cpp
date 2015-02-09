@@ -1,4 +1,3 @@
-#include <Qt3Support/q3cstring.h>
 #include "interactions.h"
 
 glm::dvec3 getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target) {

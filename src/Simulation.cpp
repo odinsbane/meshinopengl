@@ -1,5 +1,3 @@
-#include <ldap.h>
-#include <CoreGraphics/CoreGraphics.h>
 #include "Simulation.h"
 
 ActinFilament* Simulation::createNewFilament(){
@@ -302,7 +300,7 @@ void Simulation::seedMyosinMotors(){
         for (ActinFilament* target : actins) {
             if (host == target) continue;
             double separation = target->closestApproach(host_a);
-            if (separation < motor->length) {
+            if (separation < motor->length + 2*Constants::MYOSIN_BIND_LENGTH) {
                 glm::dvec3 reflected = getReflectedPoint(target->position, host_a);
                 std::vector<double> intersections = target->getIntersections(reflected, motor->length + 2*Constants::MYOSIN_BIND_LENGTH);
                 if (intersections.size() == 0) {
@@ -362,7 +360,7 @@ void Simulation::seedMyosinMotors(){
 }
 
 void Simulation::initialize(){
-
+    /*
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -371,10 +369,11 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-    /*
+    */
+
     printf("creating test case\n");
     createTestCase();
-    */
+
     printf("preparing relax space\n");
     prepareRelaxSpace();
     //printf("relaxing");
@@ -902,8 +901,8 @@ void Simulation::seedMyosinMotorTestCase(){
 void Simulation::createTestCase() {
     //seedCrosslinkerTestCase();
     //myosinMotorTestCase();
-    //seedMyosinMotorTestCase();
-    seedMyosinAndCrosslinker();
+    seedMyosinMotorTestCase();
+    //seedMyosinAndCrosslinker();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
