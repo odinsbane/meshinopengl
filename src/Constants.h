@@ -19,7 +19,7 @@ namespace Constants {
     const double THICKNESS = 1.0;
     const double STEPS_PER_SIMULATE=1000;
     const double STEPS_PER_FRAME=5e2;
-    const double SUB_STEPS=1;
+    const double SUB_STEPS=1000;
     const double RELAXATION_LIMIT = 5e-1;
     const double ERROR_THRESHOLD = 1e-5;
     const double REPULSION=100;  //spring type force.

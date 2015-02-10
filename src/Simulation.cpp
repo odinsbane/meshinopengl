@@ -346,8 +346,6 @@ void Simulation::seedMyosinMotors(){
                 (host_a[1] + host_b[1]) * 0.5,
                 (host_a[2] + host_b[2]) * 0.5
         );
-
-
         glm::dvec3 dir = host_a - host_b;
 
         motor->direction = glm::normalize(dir);

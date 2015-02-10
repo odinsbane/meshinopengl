@@ -629,6 +629,9 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
             case GLFW_KEY_SPACE:
                 snapshot=true;
                 break;
+            case GLFW_KEY_ENTER:
+                releaseTrigger();
+                break;
         }
     }
 }
@@ -826,4 +829,17 @@ void Display::mouseMoved(GLFWwindow *window, double x, double y){
         cursor_x = x;
         cursor_y = y;
     }
+}
+
+void Display::setTrigger(std::mutex *m, std::condition_variable *cv, bool *ready) {
+    starter = m;
+    condition = cv;
+    when_ready = ready;
+}
+
+void Display::releaseTrigger() {
+    *when_ready = true;
+    //std::lock_guard<std::mutex> lk(*starter);
+    condition->notify_all();
+
 }

@@ -26,9 +26,12 @@ void main() {
         vec4 oc = meshColor*(incidenceCos*lightIntensity + meshColor*ambientIntensity);
         outputColor = vec4(oc.xyz, transparency);
 
-    } else if(mode==1){
-        outputColor = vec4(meshColor.xyz, transparency);
-    } else{
+    }
+    if(mode==1){
+        outputColor = vec4(meshColor.xyz, 1);
+    }
+
+    if(mode>1){
         outputColor=vec4(1,1,1,1);
     }
 

@@ -76,7 +76,7 @@ class SpringRepresentation{
     int floats;
     int rings = 10;
     int subdivisions = 20;
-    double radius = 0.1;
+    double radius = 0.075;
 
 public:
     SpringRepresentation();
@@ -118,6 +118,9 @@ private:
     SpringRepresentation* spring_repr;
     bool snapshot=false;
     std::mutex mutex;
+    std::mutex* starter;
+    std::condition_variable* condition;
+    bool* when_ready;
 public:
     Display(int N);
     int initialize();
@@ -138,6 +141,8 @@ public:
     void mouseReleased(GLFWwindow* window, int button, int mod);
     void mouseMoved(GLFWwindow* window, double x, double y);
     void updateLights();
+    void setTrigger(std::mutex* m, std::condition_variable* cv, bool* ready);
+    void releaseTrigger();
     double RATE = 0.001;
 };
 

@@ -163,7 +163,7 @@ bool CrosslinkedFilaments::finished(){
 
 glm::dvec3 MyosinMotorBinding::getBindingPosition(int head) {
     if(motor->isBound(head)){
-        return motor->getBound(head)->getPoint(binding_position[0]);
+        return motor->getBound(head)->getPoint(binding_position[head]);
     } else{
         double s = 0.5*motor->length - Constants::MYOSIN_BIND_LENGTH;
         if(head==MyosinMotor::BACK) s = -s;

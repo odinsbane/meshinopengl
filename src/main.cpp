@@ -20,6 +20,9 @@
 
 std::vector<Rod*> rods;
 Simulation sim;
+std::mutex m;
+std::condition_variable cv;
+bool start_simulation = false;
 
 #ifdef GLFW_DISPLAY
     void initializeGraphics();
@@ -33,6 +36,7 @@ int main(int argc, const char * argv[])
     std::cout<< "initializing\n";
 
     sim.initialize();
+
 
 #ifdef GLFW_DISPLAY
     std::vector<ActinFilament*> &actins = sim.getActins();
@@ -55,7 +59,8 @@ int main(int argc, const char * argv[])
     std::thread main([](){
         bool run = true;
         int steps = 0;
-
+        std::unique_lock<std::mutex> lk(m);
+        cv.wait(lk, []{return start_simulation;});
         std::cout<< "running\n";
 
         while(run){
@@ -82,7 +87,14 @@ int main(int argc, const char * argv[])
         }
 
     });
+    graphics->setTrigger(&m, &cv, &start_simulation);
     graphics->graphicsLoop();
+    {
+        //std::lock_guard<std::mutex> lk(m);
+        start_simulation=true;
+        cv.notify_all();
+
+    }
     main.join();
     #ifdef GLFW_DISPLAY
         graphics->shutdown();
