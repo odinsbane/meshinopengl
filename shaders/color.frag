@@ -23,6 +23,9 @@ void main() {
         vec3 disp = lightPos - pos;
         float l = dot(disp, disp);
         float incidenceCos = dot(norm, normalize(disp));
+        if(incidenceCos<0){
+            incidenceCos=0;
+        }
         vec4 oc = meshColor*(incidenceCos*lightIntensity + meshColor*ambientIntensity);
         outputColor = vec4(oc.xyz, transparency);
 

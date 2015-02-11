@@ -40,7 +40,7 @@ class Camera {
         void pan(float dx, float dy);
         void updatePosition();
         void updateLights();
-
+        void moveLight(float dx, float dy, float dz);
 };
 
 

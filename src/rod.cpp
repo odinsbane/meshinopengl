@@ -51,8 +51,8 @@ std::vector<double> Line3D::sphereBounds(glm::dvec3 &center, glm::dvec3 &directi
 
     glm::dvec3 r_perp( r[0] - proj*direction[0], r[1] - proj*direction[1], r[2] - proj*direction[2]);
     double perp = glm::length(r_perp);
-    printf("check: (%2.2f, %2.2f, %2.2f) along (%2.2f, %2.2f, %2.2f) and (%2.2f, %2.2f, %2.2f)  with radius %2.2f \n",
-    center[0], center[1], center[2], direction[0], direction[1], direction[2], point[0], point[1], point[2], radius);
+    //printf("check: (%2.2f, %2.2f, %2.2f) along (%2.2f, %2.2f, %2.2f) and (%2.2f, %2.2f, %2.2f)  with radius %2.2f \n",
+    //center[0], center[1], center[2], direction[0], direction[1], direction[2], point[0], point[1], point[2], radius);
     if(perp>radius){
         return points;
     }

@@ -123,6 +123,9 @@ int updateGraphics(){
     std::vector<CrosslinkedFilaments*> &linked = sim.getCrosslinkedFilaments();
     std::vector<MyosinMotorBinding*> &bindings = sim.getMyosinMotorBindings();
     graphics->setSpringCount(linked.size() + 2*bindings.size());
+
+    printf("updating: %d linkes \n", linked.size() + 2*bindings.size());
+
     int index = 0;
     glm::dvec3 a,b,c;
     for(CrosslinkedFilaments* x: linked){

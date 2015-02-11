@@ -148,10 +148,11 @@ void Camera::pan(float dx, float dy){
     location[0] += orientationMatrix[0]*dx + -orientationMatrix[4]*dy;
     location[1] += -orientationMatrix[1]*dx + orientationMatrix[5]*dy;
     location[2] += -orientationMatrix[2]*dx + -orientationMatrix[6]*dy;
-
+    /*
     printf("%f %f %f\n", orientationMatrix[0], orientationMatrix[1], orientationMatrix[2]);
     printf("%f %f %f\n", orientationMatrix[4], orientationMatrix[5], orientationMatrix[6]);
     printf("%f %f %f\n", orientationMatrix[8], orientationMatrix[9], orientationMatrix[10]);
+    */
     //printf("%f %f %f \n", location[0], location[1], location[2]);
 
     GLuint offsetUniform = glGetUniformLocation(theProgram, "camOffset");
@@ -225,10 +226,6 @@ void Camera::resizeWindow(float w, float h){
 }
 
 void Camera::updateLights(){
-    float cast[2]{0,0};
-    cast[0] = -light_position[0]*0.5/light_position[2];
-    cast[1] = -light_position[1]*0.5/light_position[2];
-    
     GLuint lightPositionUniform = glGetUniformLocation(theProgram, "lightPos");
     GLuint lightIntensityUniform = glGetUniformLocation(theProgram, "lightIntensity");
     GLuint ambientIntensityUniform = glGetUniformLocation(theProgram, "ambientIntensity");
@@ -239,7 +236,14 @@ void Camera::updateLights(){
     glUniform4fv(lightIntensityUniform, 1, light_intensity);
     
     glUniform4fv(ambientIntensityUniform, 1, ambient_light);
-    printf("pos: %d int: %d amb: %d\n", lightPositionUniform, lightIntensityUniform, ambientIntensityUniform);
+    //printf("pos: %d int: %d amb: %d\n", lightPositionUniform, lightIntensityUniform, ambientIntensityUniform);
     
     glUseProgram(0);
+}
+
+void Camera::moveLight(float dx, float dy, float dz) {
+    light_position[0] += dx;
+    light_position[1] += dy;
+    light_position[2] += dz;
+    updateLights();
 }

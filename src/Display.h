@@ -144,6 +144,8 @@ public:
     void setTrigger(std::mutex* m, std::condition_variable* cv, bool* ready);
     void releaseTrigger();
     double RATE = 0.001;
+
+    void moveLights(float dx, float dy, float dz);
 };
 
 

@@ -165,16 +165,18 @@ SpringRepresentation::SpringRepresentation(){
 
 void SpringRepresentation::updateRepresentation(int index, float *positions, glm::dvec3 &a, glm::dvec3 &b) {
     int offset = index*floats;
-
-
+    //printf("updating spring: %d\n", index);
+    //printf("%f, %f, %f \t %f, %f, %f \n", a[0], a[1], a[2], b[0], b[1], b[2]);
     glm::dvec3 r = b - a;
     glm::dvec3 r_hat = glm::normalize(r);
+    //printf("\tr^: %f,%f,%f\n", r_hat[0], r_hat[1], r_hat[2]);
+
     double min = 1;
     int axis = -1;
 
     for(int i = 0; i<3; i++){
-        if(r_hat[i]<min){
-            min = r_hat[i];
+        if(fabs(r_hat[i])<min){
+            min = fabs(r_hat[i]);
             axis = i;
         }
     }
@@ -182,8 +184,13 @@ void SpringRepresentation::updateRepresentation(int index, float *positions, glm
     glm::dvec3 j_hat(0,0,0);
     j_hat[axis] = 1;
 
+    //printf("\tj^: %f,%f,%f\n", j_hat[0], j_hat[1], j_hat[2]);
+
     glm::dvec3 a1_hat = glm::normalize(glm::cross(r_hat, j_hat));
     glm::dvec3 a2_hat = glm::cross(a1_hat, r_hat);
+
+    //printf("\ta1^: %f,%f,%f\n", a1_hat[0], a1_hat[1], a1_hat[2]);
+    //printf("\ta2^: %f,%f,%f\n", a2_hat[0], a2_hat[1], a2_hat[2]);
 
 
     positions[offset + 0] = (float)a[0];
@@ -200,8 +207,6 @@ void SpringRepresentation::updateRepresentation(int index, float *positions, glm
         positions[offset + 3*(i+1)] = (float)(a[0] + r[0]*s + a1_hat[0]*radius*cos(theta) + a2_hat[0]*radius*sin(theta));
         positions[offset + 3*(i+1) + 1] = (float)(a[1] + r[1]*s + a1_hat[1]*radius*cos(theta) + a2_hat[1]*radius*sin(theta));
         positions[offset + 3*(i+1) + 2] = (float)(a[2] + r[2]*s + a1_hat[2]*radius*cos(theta) + a2_hat[2]*radius*sin(theta));
-
-
     }
 
     positions[offset + 3*(2*n + 1) + 0] = (float)b[0];
@@ -457,8 +462,8 @@ int Display::render(){
 
         float* shift = new float[3];
         shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
-        for(int i=0; i<3; i++) {
-            for(int j=0; j<3; j++) {
+        for(int i=1; i<2; i++) {
+            for(int j=1; j<2; j++) {
                 shift[0] = (float)((i-1)*Constants::WIDTH);
                 shift[1] = (float)((j-1)*Constants::WIDTH);
                 glUniform3fv(shift_loc, 1, shift);
@@ -632,6 +637,24 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
             case GLFW_KEY_ENTER:
                 releaseTrigger();
                 break;
+            case GLFW_KEY_G:
+                moveLights(-0.1f, 0.f, 0.f);
+                break;
+            case GLFW_KEY_H:
+                moveLights(0.1f, 0.f, 0.f);
+                break;
+            case GLFW_KEY_Y:
+                moveLights(0.0f, 0.1f, 0.f);
+                break;
+            case GLFW_KEY_B:
+                moveLights(0.0f, -0.1f, 0.f);
+                break;
+            case GLFW_KEY_N:
+                moveLights(0.f, 0.f, -0.1f);
+                break;
+            case GLFW_KEY_J:
+                moveLights(0.f, 0.f, 0.1f);
+
         }
     }
 }
@@ -841,5 +864,10 @@ void Display::releaseTrigger() {
     *when_ready = true;
     //std::lock_guard<std::mutex> lk(*starter);
     condition->notify_all();
+
+}
+
+void Display::moveLights(float dx, float dy, float dz) {
+    camera->moveLight(dx, dy, dz);
 
 }
