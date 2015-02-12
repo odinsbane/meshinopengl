@@ -34,7 +34,6 @@ bool start_simulation = false;
 int main(int argc, const char * argv[])
 {
     std::cout<< "initializing\n";
-
     sim.initialize();
 
 
@@ -124,7 +123,7 @@ int updateGraphics(){
     std::vector<MyosinMotorBinding*> &bindings = sim.getMyosinMotorBindings();
     graphics->setSpringCount(linked.size() + 2*bindings.size());
 
-    printf("updating: %d linkes \n", linked.size() + 2*bindings.size());
+    printf("updating: %ld linkes \n", linked.size() + 2*bindings.size());
 
     int index = 0;
     glm::dvec3 a,b,c;
