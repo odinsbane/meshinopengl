@@ -1,12 +1,13 @@
 #include "Representations.h"
 
-MeshCylinder::MeshCylinder(int rods, int divisions){
+MeshCylinder::MeshCylinder(int rods){
     //        stalk points.         conical caps
     floats = rods*divisions*2*3*6 + 2*rods*divisions*3*(3+3);
     position_offset = floats/2;
     element_node_count = divisions*2*3 + 2*divisions*3;
-    this->divisions = divisions;
+
 }
+
 
 int MeshCylinder::getFloatCount(){
     return floats;
@@ -54,10 +55,10 @@ glm::dvec3 sum(double a, glm::dvec3 &va, double b, glm::dvec3 &vb){
 
 
 }
-void MeshCylinder::updateRod(int index, Rod &rod) {
+void MeshCylinder::updateRod(int start, Rod &rod) {
 
     //index times the number of floats for a rod.
-    int start = index*element_node_count*3;
+    //int start = index*element_node_count*3;
     //step one create the 3 axis for changes
     glm::dvec3 main_axis(
             rod.direction[0]*0.5*(rod.length),
@@ -108,4 +109,10 @@ void MeshCylinder::updateRod(int index, Rod &rod) {
         updateTriangle(&positions[start + i*floats_per_face + 27], b, a, tail, n2, n1, backwards);
     }
 
+
+
+}
+
+void MeshCylinder::setPositionOffset(int offset){
+    position_offset = offset;
 }

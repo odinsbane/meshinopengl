@@ -59,6 +59,7 @@ class Simulation{
         void seedMyosinAndCrosslinker();
         void seedMyosinMotorTestCase();
         void bindingTestCase();
+        void singleActinFilament();
         glm::dvec3 getReflectedPoint(glm::dvec3 &a, glm::dvec3 &b);
 
 };

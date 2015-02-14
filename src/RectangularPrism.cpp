@@ -48,11 +48,11 @@ int RectangularPrism::getElementNodeCount(){
     return NODES*TRIANGLES*SIDES;
 }
 
-void RectangularPrism::updateRod(int index, Rod &rod){
+void RectangularPrism::updateRod(int start, Rod &rod){
     int FACE = TRIANGLES*NODES*POSITIONS;
 
     //index times the number of floats for a rod.
-    int start = index*SIDES*FACE;
+    //int start = index*SIDES*FACE;
     //step one create the 3 axis for changes
     glm::dvec3 main_axis(
             rod.direction[0]*0.5*(rod.length + rod.diameter),

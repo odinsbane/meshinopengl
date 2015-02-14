@@ -9,7 +9,7 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 40;
+    const int ACTINS = 10;
     const int MYOSINS = 10;
 
     //simulation

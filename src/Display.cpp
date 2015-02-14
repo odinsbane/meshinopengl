@@ -33,13 +33,8 @@ void mouseMovedStatic(GLFWwindow* window, double x, double y){
     main_display->mouseMoved(window, x, y);
 }
 
-Display::Display(int rods){
-    //repr = new RectangularPrism(rods);
-    repr = new MeshCylinder(rods, 16);
-    int floats = repr->getFloatCount();
+Display::Display(){
 
-    positions = new float[floats];
-    repr->setPositions(positions);
 
     max_springs = 100;
     current_springs = 0;
@@ -47,8 +42,23 @@ Display::Display(int rods){
     spring_positions = new float[max_springs*spring_repr->getFloatCount()];
 
 
-    N = rods;
     main_display=this;
+}
+
+void Display::setRodCounts(int actins, int myosins){
+    actin_repr = new MeshHelix(actins);
+    int actin_floats = actin_repr->getFloatCount();
+    myosin_repr = new MeshCylinder(myosins);
+    int myosin_floats = myosin_repr->getFloatCount();
+    int total = actin_floats + myosin_floats;
+    positions = new float[total];
+    actin_repr->setPositions(positions);
+    myosin_repr->setPositions(positions);
+
+    actin_repr->setPositionOffset(total/2);
+    myosin_repr->setPositionOffset(total/2);
+    a_count = actins;
+    m_count = myosins;
 }
 
 
@@ -175,19 +185,21 @@ int Display::initialize(){
     
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-    
+
+    int total_floats = actin_repr->getFloatCount() + myosin_repr->getFloatCount();
     
     glGenBuffers(1, &positionBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*repr->getFloatCount(),positions, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*total_floats,positions, GL_STREAM_DRAW);
     
     GLuint posIndex = glGetAttribLocation(program, "position");
     GLuint normIndex = glGetAttribLocation(program, "normal");
+
     glEnableVertexAttribArray(posIndex);
     glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(normIndex);
-    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(repr->getPositionOffset()*sizeof(float)));
+    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(total_floats/2*sizeof(float)));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
@@ -235,7 +247,7 @@ int Display::render(){
     glUseProgram(program);
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-        int floats = repr->getFloatCount();
+        int floats = actin_repr->getFloatCount() + myosin_repr->getFloatCount();
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*floats,positions);
 
         /* Loop until the user closes the window */
@@ -272,8 +284,8 @@ int Display::render(){
                 glUniform1i(mode_loc, 0);
                 glUniform4fv(color_loc, 1, actin_color);
 
-                int actin_nodes = Constants::ACTINS * repr->getElementNodeCount();
-                int myosin_nodes = Constants::MYOSINS * repr->getElementNodeCount();
+                int actin_nodes = a_count * actin_repr->getElementNodeCount();
+                int myosin_nodes = m_count * myosin_repr->getElementNodeCount();
                 if (actin_nodes > 0) {
                     glDrawArrays(GL_TRIANGLES, 0, actin_nodes);
                 }
@@ -353,7 +365,15 @@ void Display::shutdown(){
 
 void Display::updateRod(int index, Rod &rod){
     //std::lock_guard<std::mutex> lock(mutex);
-    repr->updateRod(index, rod);
+    if(index>=a_count){
+
+        int start = (index-a_count)*myosin_repr->getElementNodeCount()*3 + a_count*actin_repr->getElementNodeCount()*3;
+
+        myosin_repr->updateRod(start, rod);
+    }else{
+        int start = index*actin_repr->getElementNodeCount()*3;
+        actin_repr->updateRod(start, rod);
+    }
 }
 
 void Display::setSpringCount(int s) {

@@ -18,7 +18,6 @@
 
 #include "rod.h"
 
-std::vector<Rod*> rods;
 Simulation sim;
 std::mutex m;
 std::condition_variable cv;
@@ -38,20 +37,8 @@ int main(int argc, const char * argv[])
 
 
 #ifdef GLFW_DISPLAY
-    std::vector<ActinFilament*> &actins = sim.getActins();
-    for(int i = 0;i<Constants::ACTINS; i++){
-        Rod* a = actins[i];
-        rods.push_back(a);
-    }
 
-    std::vector<MyosinMotor*> &myosins = sim.getMyosins();
 
-    for(int i = 0; i<Constants::MYOSINS; i++){
-        Rod* a = myosins[i];
-        rods.push_back(a);
-    }
-
-    printf("Rods loaded: %ld\n", rods.size());
     initializeGraphics();
     updateGraphics();
 #endif
@@ -104,19 +91,33 @@ int main(int argc, const char * argv[])
 #ifdef GLFW_DISPLAY
 void initializeGraphics(){
     
-    graphics = new Display(rods.size());
+    graphics = new Display();
+    graphics->setRodCounts((int)sim.getActins().size(), (int)sim.getMyosins().size());
     graphics->initialize();
     //graphics->startGraphicsLoop();
 }
 
 int updateGraphics(){
+    std::vector<ActinFilament*> &actins = sim.getActins();
+    std::vector<MyosinMotor*> &myosins = sim.getMyosins();
+
+
     //graphics->render();
     int i = 0;
-    for(auto itr = rods.begin(), end = rods.end(); itr!=end; itr++){
+
+    for(auto itr=actins.begin(), end=actins.end(); itr!=end; itr++){
         Rod* b1 = *itr;
         graphics->updateRod(i, *b1);
         i++;
     }
+
+    for(auto itr=myosins.begin(), end=myosins.end(); itr!=end; itr++){
+        Rod* b1 = *itr;
+        graphics->updateRod(i, *b1);
+        i++;
+    }
+
+
 
     int springs = 0;
     std::vector<CrosslinkedFilaments*> &linked = sim.getCrosslinkedFilaments();

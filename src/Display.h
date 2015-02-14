@@ -36,9 +36,8 @@ private:
     float* spring_positions;
     int max_springs;
     int current_springs;
-    int to_set;
+    int a_count, m_count;
 
-    int N;
 
     GLuint program;
     GLuint vao;
@@ -57,7 +56,7 @@ private:
     bool writing=false;
     Camera* camera;
     int running = 0;
-    CylinderRepresentation* repr;
+    CylinderRepresentation *actin_repr, *myosin_repr;
     SpringRepresentation* spring_repr;
     bool snapshot=false;
     std::mutex mutex;
@@ -65,7 +64,8 @@ private:
     std::condition_variable* condition;
     bool* when_ready;
 public:
-    Display(int N);
+    Display();
+    void setRodCounts(int actins, int myosins);
     int initialize();
     void updateRod(int index, Rod &rod);
     void updateSpring(int index, glm::dvec3 &a, glm::dvec3 &b);

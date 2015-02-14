@@ -359,6 +359,7 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
+
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -367,7 +368,6 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-
     /*
     printf("creating test case\n");
     createTestCase();
@@ -901,7 +901,8 @@ void Simulation::createTestCase() {
     //myosinMotorTestCase();
     //seedMyosinMotorTestCase();
     //seedMyosinAndCrosslinker();
-    bindingTestCase();
+    //bindingTestCase();
+    singleActinFilament();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
@@ -967,7 +968,7 @@ void Simulation::twoFilamentTestCase() {
 }
 void Simulation::bindingTestCase(){
     /*
-     This requires x - actins and 1 myosins
+     This requires 3 - actins and 1 myosins
      */
     ActinFilament* a = createNewFilament();
     a->position[0] = -1.6;
@@ -1024,6 +1025,20 @@ void Simulation::bindingTestCase(){
 
 
 }
+
+void Simulation::singleActinFilament(){
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+
+    actins.push_back(a);
+}
+
 std::vector<CrosslinkedFilaments *> &Simulation::getCrosslinkedFilaments() {
     return xlinkers;
 }
@@ -1031,3 +1046,4 @@ std::vector<CrosslinkedFilaments *> &Simulation::getCrosslinkedFilaments() {
 std::vector<MyosinMotorBinding *> &Simulation::getMyosinMotorBindings() {
     return bindings;
 }
+

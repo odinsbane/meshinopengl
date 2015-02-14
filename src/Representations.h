@@ -15,7 +15,8 @@ class CylinderRepresentation{
     float* positions;
     virtual int getFloatCount(){ return 0;}
     virtual int getPositionOffset(){return 0;}
-    virtual void updateRod(int index, Rod &rod){}
+    virtual void setPositionOffset(int offset){};
+    virtual void updateRod(int start, Rod &rod){}
     virtual int getElementNodeCount(){return 0;}
     void setPositions(float * p){positions = p;}
 };
@@ -35,34 +36,41 @@ public:
         N=rods;
     }
     int getFloatCount();
-    void updateRod(int index, Rod &rod);
+    void updateRod(int start, Rod &rod);
     int getPositionOffset();
     int getElementNodeCount();
 };
 
 class MeshCylinder : public CylinderRepresentation{
-    int divisions, floats, position_offset, element_node_count;
+    int divisions = 16;
+    int floats, position_offset, element_node_count;
     void updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc);
 public:
-    MeshCylinder(int rods, int divisions);
+    MeshCylinder(int rods);
     int getFloatCount();
-    void updateRod(int index, Rod &rod);
+    void updateRod(int start, Rod &rod);
     int getPositionOffset();
     int getElementNodeCount();
-
+    void setPositionOffset(int offset);
 };
 
 class MeshHelix : public CylinderRepresentation{
     int c_divs = 20;
-    int l_divs = 20;
+    int l_divs = 200;
+    double pitch = 42.4539; //2 pi every 37nm
+    //double pitch = PI/2.0;
+    double eccentricity = 0.25;
     int floats, position_offset, element_node_count;
+    void updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc);
     public:
         MeshHelix(int rods);
         int getFloatCount();
-        void updateRod(int index, Rod &rod);
+        void updateRod(int start, Rod &rod);
         int getPositionOffset();
+        void setPositionOffset(int offset);
         int getElementNodeCount();
-        void getStatus(glm::dvec3& pos, glm::dvec3& norm, double s, double theta, double radius);
+        glm::dvec3 getStalkPosition(double s, double theta, double radius, double length);
+        glm::dvec3 getStalkNormal(double s, double theta, double radius, double length);
 };
 
 class SpringRepresentation{
