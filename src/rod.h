@@ -48,7 +48,7 @@ class Rod{
         double length, diameter, stiffness, friction;
         double alpha_longitudinal = 0.5;
         double alpha_perpendicular = 1.0;
-        double alpha_rotational = 0.1;
+        double alpha_rotational = 0.01;
         Rod( double l, double r );
         glm::dvec3 direction;
         glm::dvec3 position;

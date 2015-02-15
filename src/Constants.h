@@ -9,8 +9,8 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 10;
-    const int MYOSINS = 10;
+    const int ACTINS = 1;
+    const int MYOSINS = 1;
 
     //simulation
     const double DT = 1e-5;
@@ -18,7 +18,7 @@ namespace Constants {
     const double SEED_WIDTH=6.4;
     const double THICKNESS = 1.0;
     const double STEPS_PER_SIMULATE=1000;
-    const double STEPS_PER_FRAME=5e2;
+    const double STEPS_PER_FRAME=1e3;
     const double SUB_STEPS=1000;
     const double RELAXATION_LIMIT = 5e-1;
     const double ERROR_THRESHOLD = 1e-5;
@@ -50,7 +50,7 @@ namespace Constants {
     const double CROSS_LINK_BIND_PROBABILITY = 1;
     const bool CROSS_LINKER_TURNOVER = false;
     const double K_x = 100;
-    const bool STERIC_INTERACTIONS = false;
+    const bool STERIC_INTERACTIONS = true;
 
 }
 

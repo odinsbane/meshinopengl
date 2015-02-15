@@ -25,6 +25,7 @@
 #include <ctime>
 #include <string>
 #include <thread>
+#include <condition_variable>
 #include "Representations.h"
 
 class Display{
@@ -50,10 +51,11 @@ private:
 
     TiffWriter* writer;
     char* pixbuf;
-    int height = 300;
-    int width = 400;
+    int height = 600;
+    int width = 800;
     int last = 2000;
     bool writing=false;
+    bool waiting_to_write=false;
     Camera* camera;
     int running = 0;
     CylinderRepresentation *actin_repr, *myosin_repr;
@@ -73,6 +75,7 @@ public:
     int render();
     void shutdown();
     void startWriter();
+    void requestNextFrame();
     void takeSnapShot();
     void graphicsLoop();
     int getRunning();

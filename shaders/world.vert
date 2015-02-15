@@ -13,6 +13,7 @@ uniform mat3 normalModelToCameraMatrix;
 smooth out vec4 meshColor;
 smooth out vec3 norm;
 smooth out vec3 pos;
+smooth out vec3 tnorm;
 
 out float mode;
 
@@ -34,6 +35,7 @@ void main() {
             //norm = normalize(normalModelToCameraMatrix*normal);
             pos = position;
             norm = normal;
+            tnorm = normalize(normalModelToCameraMatrix*normal);
 
         }else{
             mode=1;

@@ -158,7 +158,7 @@ int updateGraphics(){
 
     }
 
-
+    graphics->requestNextFrame();
 
     return graphics->getRunning();
 }

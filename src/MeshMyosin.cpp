@@ -1,6 +1,6 @@
 #include "Representations.h"
 
-MeshHelix::MeshHelix(int rods) {
+MeshMyosin::MeshMyosin(int rods) {
     // a panel is a 'square' shape composed of two triangles.
     //        * stalk c_div x l_divs panels.
     //        * top&bottom c_div panels + c_div triangles
@@ -9,13 +9,13 @@ MeshHelix::MeshHelix(int rods) {
     position_offset = floats/2;
 }
 
-int MeshHelix::getFloatCount(){
+int MeshMyosin::getFloatCount(){
     return floats;
 }
 
 const glm::dmat3x3 identity(1,0,0,0,1,0,0,0,1);
 
-void MeshHelix::updateRod(int start, Rod &rod){
+void MeshMyosin::updateRod(int start, Rod &rod){
     int p_triangle = 3*3;
     int p_face = 2*p_triangle;
     int p_strip = c_divs*p_face;
@@ -163,14 +163,14 @@ void MeshHelix::updateRod(int start, Rod &rod){
     }
 }
 
-int MeshHelix::getPositionOffset(){
+int MeshMyosin::getPositionOffset(){
     return position_offset;
 }
-int MeshHelix::getElementNodeCount(){
+int MeshMyosin::getElementNodeCount(){
     return element_node_count;
 }
 
-glm::dvec3 MeshHelix::getStalkPosition(double s, double theta, double radius, double length){
+glm::dvec3 MeshMyosin::getStalkPosition(double s, double theta, double radius, double length){
     double alpha = pitch*s;
     double a = (1+eccentricity)*radius*cos(theta - alpha);
     double b = (radius)*sin(theta-alpha);
@@ -182,7 +182,7 @@ glm::dvec3 MeshHelix::getStalkPosition(double s, double theta, double radius, do
 
 }
 
-glm::dvec3 MeshHelix::getTipPosition(double s, double theta, double radius, double length){
+glm::dvec3 MeshMyosin::getTipPosition(double s, double theta, double radius, double length){
     double alpha = s>0?pitch*length:0;
 
     double a = (1+eccentricity)*radius*cos(theta - alpha);
@@ -211,33 +211,8 @@ glm::dvec3 MeshHelix::getTipPosition(double s, double theta, double radius, doub
     double z = s - length/2.0;
     return glm::dvec3(x,y,z);
 }
-
-
-glm::dvec3 MeshHelix::getStalkNormal(double s, double theta, double radius, double length){
-    double alpha = pitch*s;
-    double a = (1+eccentricity)*radius*cos(theta - alpha);
-    double b = (radius)*sin(theta-alpha);
-    double r = sqrt(a*a + b*b);
-
-    double ap = -(eccentricity + 1)*radius*sin(theta - alpha);
-    double bp = radius*cos(theta-alpha);
-
-    double da_ds = -pitch*ap;
-    double db_ds = -pitch*bp;
-    double dr_ds = a/r*da_ds + b/r*db_ds;
-
-
-    double rprime = (a*ap + b*bp)/r;
-    double xp = -r*sin(theta) + cos(theta)*rprime;
-    double yp = r*cos(theta) + sin(theta)*rprime;
-    double n = sqrt(xp*xp + yp*yp);
-    double x = yp/n;
-    double y = -xp/n;
-    double z = -dr_ds;
-    return glm::normalize(glm::dvec3(x,y,z));
-}
-
-glm::dvec3 MeshHelix::getTipNormal(double s, double theta, double radius, double length){
+const double sqrt2 = sqrt(2)/2.0;
+glm::dvec3 MeshMyosin::getTipNormal(double s, double theta, double radius, double length){
     double alpha = s>0?pitch*length:0;
 
     double a = (1+eccentricity)*radius*cos(theta - alpha);
@@ -261,7 +236,10 @@ glm::dvec3 MeshHelix::getTipNormal(double s, double theta, double radius, double
             yp = 0;
             z = -1;
         } else{
+            z = s/r;
 
+            xp = xp*(r+s)/r;
+            yp = yp*(r+s)/r;
         }
     } else{
         if(s-length>0.9*radius){
@@ -269,6 +247,11 @@ glm::dvec3 MeshHelix::getTipNormal(double s, double theta, double radius, double
             yp = 0;
             z = 1;
         } else{
+            double h = s -length;
+            z = h/r;
+
+            xp = xp*(r-h)/r;
+            yp = yp*(r-h)/r;
 
         }
 
@@ -279,8 +262,28 @@ glm::dvec3 MeshHelix::getTipNormal(double s, double theta, double radius, double
     return glm::dvec3(x,y,z);
 }
 
+glm::dvec3 MeshMyosin::getStalkNormal(double s, double theta, double radius, double length){
+    double alpha = pitch*s;
+    //double a = (eccentricity + 1)*radius)*cos(theta - alpha);
+    //double b = (radius)*sin(theta-alpha);
+    double a = (1+eccentricity)*radius*cos(theta - alpha);
+    double b = (radius)*sin(theta-alpha);
+    double r = sqrt(a*a + b*b);
 
-void MeshHelix::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc){
+    double ap = -(eccentricity + 1)*radius*sin(theta - alpha);
+    double bp = radius*cos(theta-alpha);
+
+    double rprime = (a*ap + b*bp)/r;
+    double xp = -r*sin(theta) + cos(theta)*rprime;
+    double yp = r*cos(theta) + sin(theta)*rprime;
+    double n = sqrt(xp*xp + yp*yp);
+    double x = yp/n;
+    double y = -xp/n;
+    double z = 0;
+    return glm::dvec3(x,y,z);
+}
+
+void MeshMyosin::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc){
     target[0] = static_cast<float>(a[0]);
     target[1] = static_cast<float>(a[1]);
     target[2] = static_cast<float>(a[2]);
@@ -305,6 +308,6 @@ void MeshHelix::updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm:
 
 }
 
-void MeshHelix::setPositionOffset(int offset){
+void MeshMyosin::setPositionOffset(int offset){
     position_offset = offset;
 }

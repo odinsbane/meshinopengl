@@ -13,7 +13,7 @@ MyosinMotor* Simulation::createNewMotor(){
     m->F0 = Constants::MYOSIN_ACTIVE_FORCE;
     m->alpha_longitudinal = Constants::MYOSIN_ALPHA;
     m->alpha_perpendicular = Constants::MYOSIN_ALPHA;
-    m->alpha_rotational = Constants::MYOSIN_ALPHA;
+    m->alpha_rotational = Constants::MYOSIN_ALPHA*0.5;
     m->alpha_s = Constants::MYOSIN_ALPHA_S;
     m->K_m = Constants::K_m;
     m->tau_B = Constants::MYOSIN_BINDING_TIME;
@@ -359,7 +359,7 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-
+    /*
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -368,10 +368,10 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-    /*
+    */
     printf("creating test case\n");
     createTestCase();
-    */
+
     printf("preparing relax space\n");
     prepareRelaxSpace();
     //printf("relaxing");
@@ -902,30 +902,54 @@ void Simulation::createTestCase() {
     //seedMyosinMotorTestCase();
     //seedMyosinAndCrosslinker();
     //bindingTestCase();
-    singleActinFilament();
+    //singleActinFilament();
+    singleMyosinMotor();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
-    a->position[0] = 0;
-    a->position[1] = 0;
-    a->position[2] = 0;
+    a->position[0] = 0.0;
+    a->position[1] = 0.0;
+    a->position[2] = 0.01;
 
-    a->direction[0] = 0;
-    a->direction[1] = 1;
+    a->direction[0] = sqrt(2)/2;
+    a->direction[1] = sqrt(2)/2;
     a->direction[2] = 0;
     ActinFilament* b = createNewFilament();
-    b->position[0] = 0;
-    b->position[1] = 2 + 0.99*Constants::CROSS_LINK_LENGTH;
+    b->position[0] = 0.0;
+    b->position[1] = 0.0;
     b->position[2] = 0;
 
-    b->direction[0] = 0;
-    b->direction[1] = 1;
+    b->direction[0] = -sqrt(2)/2;
+    b->direction[1] = sqrt(2)/2;
     b->direction[2] = 0;
 
     actins.push_back(a);
     actins.push_back(b);
 
-    seedCrosslinkers();
+    //seedCrosslinkers();
+
+    CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
+    double s = Constants::CROSS_LINK_LENGTH*sqrt(2)/2;
+    glm::dvec3 ap = a->getPoint(s);
+    std::vector<double> possible = b->getIntersections(ap, x->length);
+
+    if(possible.size()==0){
+        printf("wtf\n");
+    }
+
+
+    //glm::dvec3 bp = b->getPoint(possible[0]);
+    x->filaments[0] = a;
+    x->locations[0] = s;
+    x->filaments[1] = b;
+    x->locations[1] = possible[0];
+
+    a->bind(b);
+    b->bind(a);
+
+    double duration = -x->tau_B*log(number_generator->nextDouble());
+    x->unbind_time = duration;
+    xlinkers.push_back(x);
 }
 
 void Simulation::twoFilamentTestCase() {
@@ -964,6 +988,36 @@ void Simulation::twoFilamentTestCase() {
 
     xlinkers.push_back(x);
 
+
+}
+
+void Simulation::singleMyosinMotor(){
+
+
+    MyosinMotor* motor = createNewMotor();
+    motor->position[0] = 0.5*Constants::MYOSIN_LENGTH + Constants::MYOSIN_BIND_LENGTH ;
+    motor->position[1] = -1;
+    motor->position[2] = 0;
+    motor->direction[0] = -1;
+    motor->direction[1] = 0;
+    motor->direction[2] = 0;
+    motor->updateBounds();
+    MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
+    bind->setNumberGenerator(number_generator);
+
+    ActinFilament* a = createNewFilament();
+    a->position[0] = 0;
+    a->position[1] = 0;
+    a->position[2] = 0;
+
+    a->direction[0] = 0;
+    a->direction[1] = 1;
+    a->direction[2] = 0;
+    actins.push_back(a);
+    bind->bind(a, MyosinMotor::FRONT, -1);
+
+    myosins.push_back(motor);
+    bindings.push_back(bind);
 
 }
 void Simulation::bindingTestCase(){

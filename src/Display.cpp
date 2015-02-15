@@ -48,7 +48,7 @@ Display::Display(){
 void Display::setRodCounts(int actins, int myosins){
     actin_repr = new MeshHelix(actins);
     int actin_floats = actin_repr->getFloatCount();
-    myosin_repr = new MeshCylinder(myosins);
+    myosin_repr = new MeshMyosin(myosins);
     int myosin_floats = myosin_repr->getFloatCount();
     int total = actin_floats + myosin_floats;
     positions = new float[total];
@@ -84,7 +84,7 @@ int Display::initialize(){
 #endif
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(800, 600, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -238,8 +238,15 @@ void Display::startWriter(){
     writing=true;
 }
 
+void Display::requestNextFrame() {
+    if(!writing){
+        return;
+    }
+    waiting_to_write=true;
+}
+
 float myosin_color[] = {0,0,1,1};
-float actin_color[] = {0.5,1,0.5,1};
+float actin_color[] = {0.0,1,0.0,1};
 float linker_color[] = {1,0,0,1};
 
 int Display::render(){
@@ -254,7 +261,7 @@ int Display::render(){
         //while
         //{
         /* Render here */
-        glClearColor(0.9f, 0.9f, 1.0f, 0.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
         glClearDepth(1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -304,7 +311,7 @@ int Display::render(){
         if(current_springs>0) {
 
             glBindBuffer(GL_ARRAY_BUFFER, springPositionBufferObject);
-
+            glLineWidth(2);
             int spring_floats = spring_repr->getFloatCount() * max_springs;
             if(current_springs<=max_springs) {
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
@@ -336,13 +343,14 @@ int Display::render(){
         
         /* Poll for and process events */
         glfwPollEvents();
-        if(writing) {
+        if(waiting_to_write) {
             glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixbuf);
             writer->writeFrame(pixbuf);
             if(writer->getCount()==last){
                 writer->close();
                 return -1;
             }
+            waiting_to_write=false;
 
         }
 
@@ -425,24 +433,24 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
         switch(key){
             case GLFW_KEY_LEFT:
                 //camera->rotate(-0.01f, 0);
-                camera->pan(0.1, 0);
+                camera->pan(0.01, 0);
                 break;
             case GLFW_KEY_RIGHT:
-                camera->pan(-0.1, 0);
+                camera->pan(-0.01, 0);
                 //camera->rotate(0.01f,0);
                 break;
             case GLFW_KEY_UP:
                 //camera->rotate(0, 0.01f);
-                camera->pan(0, -0.1);
+                camera->pan(0, -0.01);
                 break;
             case GLFW_KEY_DOWN:
-                camera->pan(0, 0.1f);
+                camera->pan(0, 0.01f);
                 break;
             case GLFW_KEY_Z:
-                camera->zoom(0.1f);
+                camera->zoom(0.05f);
                 break;
             case GLFW_KEY_A:
-                camera->zoom(-0.1f);
+                camera->zoom(-0.05f);
                 break;
             case GLFW_KEY_ESCAPE:
                 running=-1;
@@ -470,6 +478,10 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
                 break;
             case GLFW_KEY_J:
                 moveLights(0.f, 0.f, 0.1f);
+                break;
+            case GLFW_KEY_R:
+                startWriter();
+                break;
 
         }
     }
