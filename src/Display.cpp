@@ -9,6 +9,7 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
+#include <QtCore/qrect.h>
 
 
 bool shaderStatus(GLuint &shader);
@@ -39,6 +40,7 @@ Display::Display(){
     max_springs = 100;
     current_springs = 0;
     spring_repr = new SpringRepresentation();
+    spring_repr->setMaxSpringCount(max_springs);
     spring_positions = new float[max_springs*spring_repr->getFloatCount()];
 
 
@@ -215,6 +217,11 @@ int Display::initialize(){
     glEnableVertexAttribArray(posIndex);
     glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+    glEnableVertexAttribArray(normIndex);
+    glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(max_springs*spring_repr->getFloatCount()/2*sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -233,6 +240,7 @@ int Display::initialize(){
 
 void Display::startWriter(){
     //should be moved.
+    glfwGetFramebufferSize(window, &width, &height );
     writer = new TiffWriter("testing.tiff",height, width);
     pixbuf=new char[height*width*3];
     writing=true;
@@ -277,6 +285,7 @@ int Display::render(){
 
         float* shift = new float[3];
         shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
+        glEnable(GL_CULL_FACE);
         for(int i=1; i<2; i++) {
             for(int j=1; j<2; j++) {
                 shift[0] = (float)((i-1)*Constants::WIDTH);
@@ -308,19 +317,36 @@ int Display::render(){
 
         glBindVertexArray(0);
 
-        if(current_springs>0) {
 
+
+    if(current_springs>0) {
+            glDisable(GL_CULL_FACE);
+            glBindVertexArray(vao2);
             glBindBuffer(GL_ARRAY_BUFFER, springPositionBufferObject);
-            glLineWidth(2);
+
+
             int spring_floats = spring_repr->getFloatCount() * max_springs;
             if(current_springs<=max_springs) {
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
             } else{
-                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
-                //max_springs = current_springs;
-                //glBufferData(GL_ARRAY_BUFFER, sizeof(float)*spring_repr->getFloatCount()*max_springs,spring_positions, GL_STREAM_DRAW);
+                //glBufferData(GL_ARRAY_BUFFER, 0, sizeof(float) * spring_floats, spring_positions);
+
+                max_springs = current_springs;
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float)*spring_repr->getFloatCount()*max_springs,spring_positions, GL_STREAM_DRAW);
+
+                GLuint normIndex = glGetAttribLocation(program, "normal");
+
+                glEnableVertexAttribArray(normIndex);
+                glVertexAttribPointer(normIndex, 3, GL_FLOAT, GL_TRUE, 0, (GLvoid*)(max_springs*spring_repr->getFloatCount()/2*sizeof(float)));
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glBindVertexArray(0);
+
+
             }
-            glBindVertexArray(vao2);
+            //glBindVertexArray(vao2);
             shift[0] = 0;
             shift[1] = 0;
             shift[2] = 0;
@@ -331,7 +357,11 @@ int Display::render(){
             glUniform1f(trans_loc, 1.0);
             glUniform1i(mode_loc, 1);
 
-            glDrawArrays(GL_LINES, 0, spring_floats);
+            int chunk = spring_repr->getFloatCount()/6;
+            for(int i = 0; i<current_springs; i++){
+                glDrawArrays(GL_TRIANGLE_STRIP, i*chunk, chunk);
+            }
+
 
             glBindVertexArray(0);
         }
@@ -389,6 +419,8 @@ void Display::setSpringCount(int s) {
         std::lock_guard<std::mutex> lock(mutex);
         delete spring_positions;
         spring_positions = new float[spring_repr->getFloatCount()*s];
+        spring_repr->setMaxSpringCount(s);
+
     }
 
     current_springs = s;
@@ -408,15 +440,18 @@ int Display::getRunning(){
 }
 
 void Display::takeSnapShot(){
-    char* buf = new char[3*width*height];
-    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buf);
+    int w,h;
+    glfwGetFramebufferSize(window, &w, &h);
+
+    char* buf = new char[3*w*h];
+    glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, buf);
 
     char* str_buf = new char[100];
     auto start = std::chrono::system_clock::now();
 
     sprintf(str_buf, "snapshot-%lld.tif", std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count());
 
-    TiffWriter writes(str_buf, height, width);
+    TiffWriter writes(str_buf, h, w);
     writes.writeFrame(buf);
     writes.close();
 

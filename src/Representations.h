@@ -98,14 +98,17 @@ public:
 
 class SpringRepresentation{
     int floats;
-    int rings = 20;
+    int normal_offset;
+    int rings = 6;
     int subdivisions = 20;
     double radius = 0.025;
+    double line_width = 0.01;
 
 public:
     SpringRepresentation();
     void updateRepresentation(int index, float* positions, glm::dvec3 &a, glm::dvec3 &b);
     int getFloatCount();
+    void setMaxSpringCount(int number);
 };
 
 #endif

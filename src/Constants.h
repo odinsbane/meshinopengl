@@ -9,8 +9,8 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 1;
-    const int MYOSINS = 1;
+    const int ACTINS = 60;
+    const int MYOSINS = 15;
 
     //simulation
     const double DT = 1e-5;
@@ -44,7 +44,7 @@ namespace Constants {
     const double ACTIN_LENGTH_SIGMA = 0.1;
     const double MEMBRANE_BOUND_ACTIN = 0.0;
 
-    const double ANGLE_SIGMA = PI/2.0;
+    const double ANGLE_SIGMA = PI/8;
     const double CROSS_LINK_LENGTH = 0.2;
     const double CROSS_LINK_BINDING_TIME = 1e9;
     const double CROSS_LINK_BIND_PROBABILITY = 1;

@@ -359,7 +359,7 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-    /*
+
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -368,12 +368,13 @@ void Simulation::initialize(){
 
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
-    */
+
     printf("creating test case\n");
-    createTestCase();
+    //createTestCase();
 
     printf("preparing relax space\n");
     prepareRelaxSpace();
+
     //printf("relaxing");
     //relax();
     printf("finished initialization\n");
@@ -903,7 +904,8 @@ void Simulation::createTestCase() {
     //seedMyosinAndCrosslinker();
     //bindingTestCase();
     //singleActinFilament();
-    singleMyosinMotor();
+    //singleMyosinMotor();
+    randomActinFilaments();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
@@ -911,16 +913,16 @@ void Simulation::seedCrosslinkerTestCase(){
     a->position[1] = 0.0;
     a->position[2] = 0.01;
 
-    a->direction[0] = sqrt(2)/2;
-    a->direction[1] = sqrt(2)/2;
+    a->direction[0] = 0;
+    a->direction[1] = 1;
     a->direction[2] = 0;
     ActinFilament* b = createNewFilament();
-    b->position[0] = 0.0;
+    b->position[0] = Constants::CROSS_LINK_LENGTH*0.9;
     b->position[1] = 0.0;
     b->position[2] = 0;
 
-    b->direction[0] = -sqrt(2)/2;
-    b->direction[1] = sqrt(2)/2;
+    b->direction[0] = 0;
+    b->direction[1] = 1;
     b->direction[2] = 0;
 
     actins.push_back(a);
@@ -929,7 +931,7 @@ void Simulation::seedCrosslinkerTestCase(){
     //seedCrosslinkers();
 
     CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
-    double s = Constants::CROSS_LINK_LENGTH*sqrt(2)/2;
+    double s = 0.5;
     glm::dvec3 ap = a->getPoint(s);
     std::vector<double> possible = b->getIntersections(ap, x->length);
 
@@ -950,6 +952,7 @@ void Simulation::seedCrosslinkerTestCase(){
     double duration = -x->tau_B*log(number_generator->nextDouble());
     x->unbind_time = duration;
     xlinkers.push_back(x);
+
 }
 
 void Simulation::twoFilamentTestCase() {
@@ -1091,6 +1094,30 @@ void Simulation::singleActinFilament(){
     a->direction[2] = 0;
 
     actins.push_back(a);
+}
+
+void Simulation::randomActinFilaments(){
+
+    for(int i = 0; i<Constants::ACTINS; i++){
+
+        ActinFilament* a = createNewFilament();
+        a->position[0] = 0;
+        a->position[1] = 0;
+        a->position[2] = 0;
+
+        double available_angle =  Constants::ANGLE_SIGMA;
+
+        double phi = PI / 2 + (0.5 - number_generator->nextDouble()) * available_angle;
+        a->direction[0] = 0;
+        a->direction[1] = cos(phi);
+        a->direction[2] = sin(phi);
+
+        actins.push_back(a);
+
+    }
+
+
+
 }
 
 std::vector<CrosslinkedFilaments *> &Simulation::getCrosslinkedFilaments() {
