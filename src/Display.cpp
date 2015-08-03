@@ -16,11 +16,28 @@ bool shaderStatus(GLuint &shader);
 bool programStatus(GLuint &program);
 
 
-
 Display* main_display;
 void keyPressedStatic(GLFWwindow* window, int key, int scancode, int action, int mods){
     main_display->keyPressed(window, key, scancode, action, mods);
 };
+
+void windowFocusCallback(GLFWwindow* window, int focused)
+{
+    if (focused)
+    {
+        printf("gained\n");
+        printf("%d ...\n",glfwGetKey(window, GLFW_KEY_A));
+
+    }
+    else
+    {
+        printf("lost\n");
+        printf("%d ...\n",glfwGetKey(window, GLFW_KEY_A));
+
+    }
+}
+
+
 
 void mousePressedStatic(GLFWwindow* window, int button, int action, int mods){
     if(action==GLFW_PRESS) {
@@ -235,10 +252,13 @@ int Display::initialize(){
     glfwSetKeyCallback(window, keyPressedStatic);
     glfwSetMouseButtonCallback(window, mousePressedStatic);
     glfwSetCursorPosCallback(window, mouseMovedStatic);
+    glfwSetWindowFocusCallback(window, windowFocusCallback);
+
     return 0;
 }
 
 void Display::startWriter(){
+    printf("recording\n");
     //should be moved.
     glfwGetFramebufferSize(window, &width, &height );
     writer = new TiffWriter("testing.tiff",height, width);
@@ -463,8 +483,8 @@ void Display::takeSnapShot(){
 
 
 void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, int mods){
-
-    if(true){
+    printf("%d, %d, %d, %d \n", key, scancode, action, mods);
+    if(action!=0){
         switch(key){
             case GLFW_KEY_LEFT:
                 //camera->rotate(-0.01f, 0);
@@ -482,9 +502,12 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
                 camera->pan(0, 0.01f);
                 break;
             case GLFW_KEY_Z:
+                printf("z pressed\n");
                 camera->zoom(0.05f);
                 break;
             case GLFW_KEY_A:
+                printf("%d ...\n",glfwGetKey(window, GLFW_KEY_A));
+                printf("a pressed\n");
                 camera->zoom(-0.05f);
                 break;
             case GLFW_KEY_ESCAPE:

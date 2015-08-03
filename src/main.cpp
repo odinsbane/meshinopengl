@@ -22,6 +22,7 @@ Simulation sim;
 std::mutex m;
 std::condition_variable cv;
 bool start_simulation = false;
+bool run = true;
 
 #ifdef GLFW_DISPLAY
     void initializeGraphics();
@@ -43,7 +44,6 @@ int main(int argc, const char * argv[])
     updateGraphics();
 #endif
     std::thread main([](){
-        bool run = true;
         int steps = 0;
         std::unique_lock<std::mutex> lk(m);
         cv.wait(lk, []{return start_simulation;});
@@ -76,6 +76,7 @@ int main(int argc, const char * argv[])
     graphics->setTrigger(&m, &cv, &start_simulation);
     graphics->graphicsLoop();
     {
+        run=false;
         //std::lock_guard<std::mutex> lk(m);
         start_simulation=true;
         cv.notify_all();

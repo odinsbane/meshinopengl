@@ -55,8 +55,8 @@ public:
 };
 
 class MeshHelix : public CylinderRepresentation{
-    int c_divs = 20;
-    int l_divs = 200;
+    int c_divs = 5;
+    int l_divs = 10;
     double pitch = 42.4539; //2 pi every 37nm
     //double pitch = PI/2.0;
     double eccentricity = 0.5;
@@ -76,7 +76,7 @@ class MeshHelix : public CylinderRepresentation{
 };
 
 class MeshMyosin : public CylinderRepresentation{
-    int c_divs = 20;
+    int c_divs = 10;
     int l_divs = 2;
     double pitch = 0; //2 pi every 37nm
     //double pitch = PI/2.0;
@@ -99,8 +99,8 @@ public:
 class SpringRepresentation{
     int floats;
     int normal_offset;
-    int rings = 6;
-    int subdivisions = 20;
+    int rings = 4;
+    int subdivisions = 8;
     double radius = 0.025;
     double line_width = 0.01;
 

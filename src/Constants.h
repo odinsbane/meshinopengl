@@ -9,19 +9,19 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 60;
-    const int MYOSINS = 15;
+    const int ACTINS = 10;
+    const int MYOSINS = 1;
 
     //simulation
-    const double DT = 1e-5;
-    const double WIDTH = 6.4;
-    const double SEED_WIDTH=6.4;
-    const double THICKNESS = 1.0;
-    const double STEPS_PER_SIMULATE=1000;
+    const double DT = 1e-4;
+    const double WIDTH = 10;
+    const double SEED_WIDTH=10;
+    const double THICKNESS = 0.01;
+    const double STEPS_PER_SIMULATE=100;
     const double STEPS_PER_FRAME=1e3;
-    const double SUB_STEPS=1000;
+    const double SUB_STEPS=1;
     const double RELAXATION_LIMIT = 5e-1;
-    const double ERROR_THRESHOLD = 1e-5;
+    const double ERROR_THRESHOLD = 1e-3;
     const double REPULSION=100;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 0.1; //constant force
@@ -44,13 +44,13 @@ namespace Constants {
     const double ACTIN_LENGTH_SIGMA = 0.1;
     const double MEMBRANE_BOUND_ACTIN = 0.0;
 
-    const double ANGLE_SIGMA = PI/8;
+    const double ANGLE_SIGMA = 0;
     const double CROSS_LINK_LENGTH = 0.2;
     const double CROSS_LINK_BINDING_TIME = 1e9;
     const double CROSS_LINK_BIND_PROBABILITY = 1;
     const bool CROSS_LINKER_TURNOVER = false;
     const double K_x = 100;
-    const bool STERIC_INTERACTIONS = true;
+    const bool STERIC_INTERACTIONS = false;
 
 }
 

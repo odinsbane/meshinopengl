@@ -67,7 +67,7 @@ void Camera::setPosition(){
 void Camera::zoom(double dr){
     
     r += dr;
-    
+    printf("zoomed\n");
     updatePosition();
     
     

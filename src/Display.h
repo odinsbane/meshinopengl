@@ -53,7 +53,7 @@ private:
     char* pixbuf;
     int height = 600;
     int width = 800;
-    int last = 2000;
+    int last = 200;
     bool writing=false;
     bool waiting_to_write=false;
     Camera* camera;
