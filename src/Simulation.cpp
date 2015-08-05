@@ -62,7 +62,6 @@ void Simulation::seedCrosslinkers(){
 }
 void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
     if(fa->isBound(fb)) return;
-
     CrosslinkedFilaments* x = createNewCrosslinkedFilaments();
 
     glm::dvec2 sections = getReflectedIntersections(fa, fb);
@@ -76,12 +75,9 @@ void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
         if(possible.size()==0) return;
         printf("wtf\n");
     }
-
-
     double bs = possible[number_generator->nextInt(possible.size())];
 
 
-    glm::dvec3 b = fb->getPoint(bs);
     x->filaments[0] = fa;
     x->locations[0] = sections[0];
     x->filaments[1] = fb;
@@ -222,7 +218,7 @@ void Simulation::prepareRelaxSpace(){
 * Uses the periodic boundary conditions to determine the closest location
 * that dest could be.
 */
-glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 &src, glm::dvec3 &target) {
+glm::dvec3 Simulation::getReflectedPoint(glm::dvec3 src, glm::dvec3 target) {
     glm::dvec3 out;
     double hw = Constants::WIDTH*0.5;
     if( target[0] - src[0] > hw){
@@ -342,7 +338,7 @@ void Simulation::seedMyosinMotors(){
                         host_a[1] + l * sin(theta) * sin(phi),
                         host_a[2] + l * cos(phi)
                 );
-                printf("myosin head could not find a filament to attach to.\n");
+                //printf("myosin head could not find a filament to attach to.\n");
             } while (host_b[2] > Constants::MEMBRANE_POSITION);
 
         }

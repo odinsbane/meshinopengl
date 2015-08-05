@@ -62,7 +62,7 @@ class Simulation{
         void singleActinFilament();
         void singleMyosinMotor();
         void randomActinFilaments();
-        glm::dvec3 getReflectedPoint(glm::dvec3 &a, glm::dvec3 &b);
+        glm::dvec3 getReflectedPoint(glm::dvec3 a, glm::dvec3 b);
 
 };
 

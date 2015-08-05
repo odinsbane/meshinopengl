@@ -272,8 +272,8 @@ void Display::requestNextFrame() {
     waiting_to_write=true;
 }
 
-float myosin_color[] = {0,0,1,1};
-float actin_color[] = {0.0,1,0.0,1};
+float myosin_color[] = {0.1,0.1,1,1};
+float actin_color[] = {0.9,1,0.9,1};
 float linker_color[] = {1,0,0,1};
 
 int Display::render(){
