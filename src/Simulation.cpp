@@ -290,12 +290,22 @@ void Simulation::seedMyosinMotors(){
 
         MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
         bind->setNumberGenerator(number_generator);
-        ActinFilament* host = actins[number_generator->nextInt(actins.size())];
+        glm::dvec3 host_a;
+        double host_diameter = 0;
+        ActinFilament* host;
+        if(actins.size()>0){
+            host = actins[number_generator->nextInt(actins.size())];
 
-        double s = (number_generator->nextDouble() - 0.5) * host->length;
-        glm::dvec3 host_a = host->getPoint(s);
-
-        bind->bind(host, MyosinMotor::FRONT, s);
+            double s = (number_generator->nextDouble() - 0.5) * host->length;
+            host_a = host->getPoint(s);
+            host_diameter = host->diameter;
+            bind->bind(host, MyosinMotor::FRONT, s);
+        } else{
+            host_a[0] = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+            host_a[1] = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+            host_a[2] = Constants::THICKNESS * number_generator->nextDouble() - 0.5 * Constants::THICKNESS;
+            host_diameter = 0;
+        }
         std::vector<ActinFilament*> possibles;
         for (ActinFilament* target : actins) {
             if (host == target) continue;
@@ -326,7 +336,7 @@ void Simulation::seedMyosinMotors(){
                double phi = PI * number_generator->nextDouble();
                 double theta = 2 * PI * number_generator->nextDouble();
                 //TODO remove
-                double l = motor->length + motor->diameter + host->diameter;
+                double l = motor->length + motor->diameter + host_diameter;
                 host_b = glm::dvec3(
                         host_a[0] + l * cos(theta) * sin(phi),
                         host_a[1] + l * sin(theta) * sin(phi),

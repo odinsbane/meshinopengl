@@ -9,7 +9,6 @@
 #include "Display.h"
 #include "error.h"
 #include <stdio.h>
-#include <QtCore/qrect.h>
 
 
 bool shaderStatus(GLuint &shader);

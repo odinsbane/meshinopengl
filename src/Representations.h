@@ -15,7 +15,7 @@ class CylinderRepresentation{
     float* positions;
     virtual int getFloatCount(){ return 0;}
     virtual int getPositionOffset(){return 0;}
-    virtual void setPositionOffset(int offset){};
+    virtual void setPositionOffset(int offset){}
     virtual void updateRod(int start, Rod &rod){}
     virtual int getElementNodeCount(){return 0;}
     void setPositions(float * p){positions = p;}
