@@ -365,7 +365,7 @@ void Simulation::seedMyosinMotors(){
 
 void Simulation::initialize(){
 
-
+    //singleActinFilament();
     freeSeedActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
@@ -375,7 +375,7 @@ void Simulation::initialize(){
     seedCrosslinkers();
     printf("%ld xlinkers\n", xlinkers.size());
 
-    printf("creating test case\n");
+    //printf("creating test case\n");
     //createTestCase();
 
     printf("preparing relax space\n");
@@ -783,6 +783,11 @@ double Simulation::reflectedCollision(Rod *other, Rod *filament) {
         }
 }
 
+/**
+ *
+ * @brief Simulation::myosinMotorTestCase replaces initilization with a test case.
+ *
+ */
 void Simulation::myosinMotorTestCase(){
     ActinFilament* a = createNewFilament();
     a->position[0] = 0;
@@ -911,7 +916,8 @@ void Simulation::createTestCase() {
     //bindingTestCase();
     //singleActinFilament();
     //singleMyosinMotor();
-    randomActinFilaments();
+    //randomActinFilaments();
+    wrapAroundNetwork();
 }
 void Simulation::seedCrosslinkerTestCase(){
     ActinFilament* a = createNewFilament();
@@ -1123,6 +1129,55 @@ void Simulation::randomActinFilaments(){
     }
 
 
+
+}
+
+void Simulation::wrapAroundNetwork(){
+    /*
+     This requires 2 - actins and 1 myosins
+     */
+    ActinFilament* a = createNewFilament();
+    a->length = 2.0;
+    a->position[0] = -1.5;
+    a->position[1] = 0;
+    a->position[2] = 0.5;
+
+    a->direction[0] = -1;
+    a->direction[1] = 0;
+    a->direction[2] = 0;
+    actins.push_back(a);
+
+    /*ActinFilament* b = createNewFilament();
+    b->length = 2.0;
+    b->position[0] = 1.5;
+    b->position[1] = 0;
+    b->position[2] = 0.5;
+
+    b->direction[0] = 1;
+    b->direction[1] = 0;
+    b->direction[2] = 0;
+
+    actins.push_back(b);
+
+    seedCrosslinkers();
+    */
+    MyosinMotor* motor = createNewMotor();
+    motor->length=0.6;
+    motor->position[0] = 0 ;
+    motor->position[1] = 0.2;
+    motor->position[2] = 0.5;
+    motor->direction[0] = 1;
+    motor->direction[1] = 0;
+    motor->direction[2] = 0;
+    motor->updateBounds();
+    MyosinMotorBinding* bind = new MyosinMotorBinding(motor);
+    bind->setNumberGenerator(number_generator);
+
+    bind->bind(a, MyosinMotor::BACK, -1);
+    //bind->bind(b, MyosinMotor::FRONT, -1);
+
+    myosins.push_back(motor);
+    bindings.push_back(bind);
 
 }
 

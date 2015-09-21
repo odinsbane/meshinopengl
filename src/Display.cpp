@@ -504,9 +504,9 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
                 printf("z pressed\n");
                 camera->zoom(0.05f);
                 break;
-            case GLFW_KEY_A:
+            case GLFW_KEY_Q:
                 printf("%d ...\n",glfwGetKey(window, GLFW_KEY_A));
-                printf("a pressed\n");
+                printf("q pressed\n");
                 camera->zoom(-0.05f);
                 break;
             case GLFW_KEY_ESCAPE:
