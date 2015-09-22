@@ -21,7 +21,7 @@ uniform vec4 ambientIntensity;
 uniform vec3 lightPos;
 
 vec4 WHITE=vec4(1,1,1,1);
-float SPEC = 50;
+float SPEC = 20;
 void main() {
     vec4 oc;
     if(t_norm.z<0){

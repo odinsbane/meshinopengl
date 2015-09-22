@@ -9,19 +9,19 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 100;
-    const int MYOSINS = 50;
+    const int ACTINS = 250;
+    const int MYOSINS = 25;
 
     //simulation
-    const double DT = 1e-4;
+    const double DT = 5e-5;
     const double WIDTH = 5;
     const double SEED_WIDTH=5;
     const double THICKNESS = 1.0;
-    const double STEPS_PER_SIMULATE=100;
-    const double STEPS_PER_FRAME=1e3;
+    const double STEPS_PER_SIMULATE=1000;
+    const double STEPS_PER_FRAME=1e2;
     const double SUB_STEPS=1;
-    const double RELAXATION_LIMIT = 5e-1;
-    const double ERROR_THRESHOLD = 1e-3;
+    const double RELAXATION_LIMIT = 1e-1;
+    const double ERROR_THRESHOLD = 1e-5;
     const double REPULSION=100;  //spring type force.
     const double MEMBRANE_POSITION=0.4;
     const double MEMBRANE_REPULSION = 0.1; //constant force
@@ -33,10 +33,10 @@ namespace Constants {
     const double MYOSIN_ALPHA_S = 1;
     const double MYOSIN_ALPHA = 1;
     const double K_m = 100.0;
-    const double MYOSIN_BIND_LENGTH = 0.2;
+    const double MYOSIN_BIND_LENGTH = 0.3;
     const double MYOSIN_BINDING_TIME = 10e32;
     const double MYOSIN_BIND_PROBABILITY = 0.9;
-    const double MYOSIN_DIFFUSION_FORCE = 10;
+    const double MYOSIN_DIFFUSION_FORCE = 0;
 
     const double ACTIN_LENGTH = 2.0;  //500 nm.
     const double ACTIN_DIAMETER = 0.032;//8 nm.
@@ -47,7 +47,7 @@ namespace Constants {
     const double ANGLE_SIGMA = 0;
     const double CROSS_LINK_LENGTH = 0.2;
     const double CROSS_LINK_BINDING_TIME = 1e9;
-    const double CROSS_LINK_BIND_PROBABILITY = 1.0;
+    const double CROSS_LINK_BIND_PROBABILITY = 0.01;
     const bool CROSS_LINKER_TURNOVER = false;
     const double K_x = 100;
     const bool STERIC_INTERACTIONS = false;
