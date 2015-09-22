@@ -7,7 +7,7 @@ _OBJ = Display.o interactions.o  MeshCylinder.o MeshMyosin.o RectangularPrism.o 
 OBJ = $(patsubst %, $(OBJDIR)/%,$(_OBJ))
 DEPS = *.h
 DEPS += /usr/include/tiffio.h
-LIBS=-L$(GLFW3_HOME)/lib/ -ltiff -lglfw3 -lrt -lXrandr -lXi -lGL -lm -ldl -lXrender -ldrm -lXdamage -lX11-xcb -lxcb-glx -lxcb-dri2 -lXxf86vm -lXfixes -lXext -lX11 -lpthread -lxcb -lXau -lGLEW
+LIBS=-L$(GLFW3_HOME)/lib/ -ltiff -lglfw3 -lGLEW -lrt -lm -ldl -lXrandr -lXinerama -lXi -lXcursor -lXrender -lGL -lm -lpthread -ldl -ldrm -lXdamage -lXfixes -lX11-xcb -lxcb-glx -lxcb-dri2 -lxcb-dri3 -lxcb-present -lxcb-randr -lxcb-xfixes -lxcb-render -lxcb-shape -lxcb-sync -lxshmfence -lXxf86vm -lXext -lX11 -lpthread -lxcb -lXau
 cmd_line: $(OBJ)
 	$(CC) $(OBJ) $(LIBS) -o $(BUILD_DIR)/parallel_balls
 	
