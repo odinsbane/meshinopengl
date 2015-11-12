@@ -91,6 +91,41 @@ void Simulation::crosslinkFilaments(ActinFilament* fa, ActinFilament* fb){
     xlinkers.push_back(x);
 }
 
+void Simulation::seedSphericalActinFilaments(){
+    for(int i = 0; i<Constants::ACTINS; i++){
+        ActinFilament* f = createNewFilament();
+
+        double theta = PI*2*number_generator->nextDouble();
+        double phi = acos( (1-2*number_generator->nextDouble()) );
+        double r = Constants::THICKNESS*number_generator->nextDouble() + Constants::SEED_WIDTH;
+
+        double x = cos(theta)*sin(phi)*r;
+        double y = sin(theta)*sin(phi)*r;
+        double z = cos(phi)*r;
+
+        f->position = glm::dvec3(
+                x,
+                y,
+                z
+        );
+
+        double alpha = 2*PI*number_generator->nextDouble();
+        double sa = sin(alpha);
+        double ca = cos(alpha);
+        f->direction = glm::dvec3(
+                sa*cos(theta)*cos(phi) - ca*sin(theta),
+                sa*sin(theta)*cos(phi) + ca*cos(theta),
+                -sa*sin(phi)
+        );
+
+
+
+        f->updateBounds();
+        actins.push_back(f);
+
+    }
+}
+
 void Simulation::freeSeedActinFilaments(){
     for(int i = 0; i<Constants::ACTINS; i++){
         //generate a free filament.
@@ -363,10 +398,12 @@ void Simulation::seedMyosinMotors(){
     }
 }
 
+
 void Simulation::initialize(){
 
     //singleActinFilament();
-    freeSeedActinFilaments();
+    //freeSeedActinFilaments();
+    seedSphericalActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
     seedMyosinMotors();
@@ -740,8 +777,84 @@ void Simulation::updateInteractions(double dt){
 
     for(MyosinMotorBinding* binding: bindings){
         binding->update(dt);
+        MyosinMotor* motor = binding->getMotor();
+        if(
+                motor->isFree(MyosinMotor::FRONT) && motor->isFree(MyosinMotor::BACK)
+                ){
+            replaceMyosinMotor(binding);
+        }
     }
     clearForces();
+}
+
+void Simulation::replaceMyosinMotor(MyosinMotorBinding* bind){
+    glm::dvec3 host_a;
+    double host_diameter = 0;
+    MyosinMotor* motor = bind->getMotor();
+    ActinFilament* host;
+    if(actins.size()>0){
+        host = actins[number_generator->nextInt(actins.size())];
+
+        double s = (number_generator->nextDouble() - 0.5) * host->length;
+        host_a = host->getPoint(s);
+        host_diameter = host->diameter;
+        bind->bind(host, MyosinMotor::FRONT, s);
+    } else{
+        host_a[0] = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+        host_a[1] = Constants::SEED_WIDTH * number_generator->nextDouble() - 0.5 * Constants::SEED_WIDTH;
+        host_a[2] = Constants::THICKNESS * number_generator->nextDouble() - 0.5 * Constants::THICKNESS;
+        host_diameter = 0;
+    }
+    std::vector<ActinFilament*> possibles;
+    for (ActinFilament* target : actins) {
+        if (host == target) continue;
+        double separation = target->closestApproach(host_a);
+        if (separation < motor->length + 2*Constants::MYOSIN_BIND_LENGTH) {
+            glm::dvec3 reflected = getReflectedPoint(target->position, host_a);
+            std::vector<double> intersections = target->getIntersections(reflected, motor->length + 2*Constants::MYOSIN_BIND_LENGTH);
+            if (intersections.size() == 0) {
+                //The attached head of the motor is too close to the center of the target filament.
+                continue;
+            }
+            possibles.push_back(target);
+        }
+    }
+    glm::dvec3 host_b;
+    if (possibles.size() > 0) {
+
+        ActinFilament* other = possibles[number_generator->nextInt(possibles.size())];
+        glm::dvec3 reflected = getReflectedPoint(other->position, host_a);
+        std::vector<double> intersections = other->getIntersections(reflected, motor->length + 2*Constants::MYOSIN_BIND_LENGTH);
+
+        double s2 = intersections[number_generator->nextInt(intersections.size())];
+        glm::dvec3 target_p = other->getPoint(s2);
+        host_b = getReflectedPoint(host_a, target_p);
+        bind->bind(other, MyosinMotor::BACK, s2);
+    } else {
+        do {
+           double phi = PI * number_generator->nextDouble();
+            double theta = 2 * PI * number_generator->nextDouble();
+            //TODO remove
+            double l = motor->length + motor->diameter + host_diameter;
+            host_b = glm::dvec3(
+                    host_a[0] + l * cos(theta) * sin(phi),
+                    host_a[1] + l * sin(theta) * sin(phi),
+                    host_a[2] + l * cos(phi)
+            );
+            //printf("myosin head could not find a filament to attach to.\n");
+        } while (host_b[2] > Constants::MEMBRANE_POSITION);
+
+    }
+
+    motor->position = glm::dvec3(
+            (host_a[0] + host_b[0]) * 0.5,
+            (host_a[1] + host_b[1]) * 0.5,
+            (host_a[2] + host_b[2]) * 0.5
+    );
+    glm::dvec3 dir = host_a - host_b;
+
+    motor->direction = glm::normalize(dir);
+
 }
 
 double step_dt = 0;

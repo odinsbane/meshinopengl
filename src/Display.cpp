@@ -272,9 +272,9 @@ void Display::requestNextFrame() {
     waiting_to_write=true;
 }
 
-float myosin_color[] = {0.1,0.1,1,1};
-float actin_color[] = {0.9,1,0.9,1};
-float linker_color[] = {1,0,0,1};
+float myosin_color[] = {1.0,0.647,0,1};
+float actin_color[] = {1.0,0.1,0.1,1};
+float linker_color[] = {0.2,1.0,0,1};
 
 int Display::render(){
     std::lock_guard<std::mutex> lock(mutex);
@@ -288,7 +288,7 @@ int Display::render(){
         //while
         //{
         /* Render here */
-        glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
         glClearDepth(1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -504,9 +504,11 @@ void Display::keyPressed(GLFWwindow* window, int key, int scancode, int action, 
                 printf("z pressed\n");
                 camera->zoom(0.05f);
                 break;
+            case GLFW_KEY_A:
+                printf("a pressed\n");
+                exit(-1);
             case GLFW_KEY_Q:
                 printf("%d ...\n",glfwGetKey(window, GLFW_KEY_A));
-                printf("q pressed\n");
                 camera->zoom(-0.05f);
                 break;
             case GLFW_KEY_ESCAPE:

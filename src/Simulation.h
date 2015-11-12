@@ -23,6 +23,7 @@ class Simulation{
     void seedActinFilaments();
     void seedMyosinMotors();
     void freeSeedActinFilaments();
+    void seedSphericalActinFilaments();
     void restorePositions(int index);
     void clearForces();
     void copyForces(int index);
@@ -63,6 +64,7 @@ class Simulation{
         void singleMyosinMotor();
         void wrapAroundNetwork();
         void randomActinFilaments();
+        void replaceMyosinMotor(MyosinMotorBinding* binding);
         glm::dvec3 getReflectedPoint(glm::dvec3 a, glm::dvec3 b);
 
 };

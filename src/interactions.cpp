@@ -98,8 +98,8 @@ void MyosinMotorBinding::update(double dt){
                     fabs(motor->getPoint(-motor->length*0.5)[2])>Constants::THICKNESS*0.5
             ){
 
-        motor->unbind(MyosinMotor::FRONT);
-        motor->unbind(MyosinMotor::BACK);
+        //motor->unbind(MyosinMotor::FRONT);
+        //motor->unbind(MyosinMotor::BACK);
         //model->placeBoundMyosinMotor(motor, this);
     }
 }

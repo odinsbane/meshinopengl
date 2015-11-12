@@ -41,7 +41,7 @@ void main() {
         }else if(fade>1){
             fade = 1;
         }
-        meshColor = color*pow(fade, 4);
+        meshColor = color*pow(fade, 1);
 
 
 }
