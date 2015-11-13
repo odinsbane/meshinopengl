@@ -9,13 +9,13 @@
 namespace Constants {
 
     //initialization
-    const int ACTINS = 1000;
-    const int MYOSINS = 0;
+    const int ACTINS = 20;
+    const int MYOSINS = 1;
 
     //simulation
     const double DT = 1e-3;
     const double WIDTH = 20;
-    const double SEED_WIDTH=5;
+    const double SEED_WIDTH=2;
     const double THICKNESS = 0.25;
     const double STEPS_PER_SIMULATE=1000;
     const double STEPS_PER_FRAME=1e2;
@@ -38,7 +38,7 @@ namespace Constants {
     const double MYOSIN_BIND_PROBABILITY = 0.9;
     const double MYOSIN_DIFFUSION_FORCE = 0;
 
-    const double ACTIN_LENGTH = 1.0;  //500 nm.
+    const double ACTIN_LENGTH = 2.0;  //500 nm.
     const double ACTIN_DIAMETER = 0.032;//8 nm.
     const double ACTIN_ALPHA = 1.0;
     const double ACTIN_LENGTH_SIGMA = 0.1;
@@ -46,8 +46,8 @@ namespace Constants {
 
     const double ANGLE_SIGMA = 0;
     const double CROSS_LINK_LENGTH = 0.2;
-    const double CROSS_LINK_BINDING_TIME = 1e9;
-    const double CROSS_LINK_BIND_PROBABILITY = 3e-10;
+    const double CROSS_LINK_BINDING_TIME = 1e10;
+    const double CROSS_LINK_BIND_PROBABILITY = 3;
     const bool CROSS_LINKER_TURNOVER = false;
     const double K_x = 100;
     const bool STERIC_INTERACTIONS = false;
