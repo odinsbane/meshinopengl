@@ -27,7 +27,7 @@ Camera::Camera(GLuint &program){
     printf("initializing lights\n");
     light_position = new float[3]{-0.0,-0.0,1.0};
     light_intensity = new float[4]{0.9,0.9,0.9,1};
-    ambient_light = new float[4]{0.3, 0.3, 0.3, 1.0};
+    ambient_light = new float[4]{0.5, 0.5, 0.5, 1.0};
     GetError();
     updateLights();
     
@@ -83,7 +83,7 @@ void Camera::setPerspectiveMatrix(){
     float fFrustumScale = 1.0f; 
     float fzNear = 0.5f;
     
-    float fzFar = 10.0f;
+    float fzFar = 20.0f;
     
     //column
     perspectiveMatrix[0] = fFrustumScale/aspect;

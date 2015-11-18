@@ -102,7 +102,7 @@ class SpringRepresentation{
     int rings = 4;
     int subdivisions = 8;
     double radius = 0.025;
-    double line_width = 0.01;
+    double line_width = 0.02;
 
 public:
     SpringRepresentation();

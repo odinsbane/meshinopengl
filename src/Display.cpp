@@ -10,6 +10,10 @@
 #include "error.h"
 #include <stdio.h>
 
+float myosin_color[] = {.1,0.1,1,1};
+float actin_color[] = {0.1,1,0,1};
+float linker_color[] = {0.7,0.0,0.7,1};
+float bg[] = {1,1,1};
 
 bool shaderStatus(GLuint &shader);
 bool programStatus(GLuint &program);
@@ -272,9 +276,7 @@ void Display::requestNextFrame() {
     waiting_to_write=true;
 }
 
-float myosin_color[] = {1.0,0.647,0,1};
-float actin_color[] = {1.0,0.1,0.1,1};
-float linker_color[] = {0.2,1.0,0,1};
+
 
 int Display::render(){
     std::lock_guard<std::mutex> lock(mutex);
@@ -288,7 +290,7 @@ int Display::render(){
         //while
         //{
         /* Render here */
-        glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+        glClearColor(bg[0], bg[1], bg[2], 0.0f);
         glClearDepth(1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

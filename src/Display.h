@@ -28,6 +28,8 @@
 #include <condition_variable>
 #include "Representations.h"
 
+
+
 class Display{
 private:
     GLFWwindow* window;

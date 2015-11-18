@@ -35,13 +35,8 @@ void main() {
         t_norm = normalize(normalModelToCameraMatrix*normal);
         t_pos = camPosition.xyz;
 
-        float fade = 0.5 + position.z;
-        if(fade<0){
-            fade=0;
-        }else if(fade>1){
-            fade = 1;
-        }
-        meshColor = color*pow(fade, 1);
+        
+        meshColor = color;
 
 
 }

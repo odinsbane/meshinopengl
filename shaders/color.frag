@@ -24,31 +24,28 @@ vec4 WHITE=vec4(1,1,1,1);
 float SPEC = 20;
 void main() {
     vec4 oc;
-    if(t_norm.z<0){
-         oc = vec4(0,0,0,1);
+    
+	vec3 disp = lightPos - pos;
+	float l = dot(disp, disp);
+	vec3 lDir = normalize(normalModelToCameraMatrix*disp);
 
-    } else{
-        vec3 disp = lightPos - pos;
-        float l = dot(disp, disp);
-        vec3 lDir = normalize(normalModelToCameraMatrix*disp);
-
-        float incidenceCos = dot(t_norm, lDir);
-        if(incidenceCos<0){
-            incidenceCos=0;
-        }
-        vec3 n_pos = normalize(t_pos);
-        vec3 rDir = reflect(-lDir, n_pos);
-        vec3 m_norm = vec3(-t_norm.x, -t_norm.y, t_norm.z);
-        float phong = dot(rDir, m_norm);
-        phong = clamp(phong, 0, 1);
-        float f = 1/pow(l, 0.25);
-        //phong = incidenceCos!=0?phong:0;
-        phong = pow(phong, SPEC);
+	float incidenceCos = dot(t_norm, lDir);
+	if(incidenceCos<0){
+		incidenceCos=0;
+	}
+	vec3 n_pos = normalize(t_pos);
+	vec3 rDir = reflect(-lDir, n_pos);
+	vec3 m_norm = vec3(-t_norm.x, -t_norm.y, t_norm.z);
+	float phong = dot(rDir, m_norm);
+	phong = clamp(phong, 0, 1);
+	float f = 1/pow(l, 0.2);
+	//phong = incidenceCos!=0?phong:0;
+	phong = pow(phong, SPEC);
 
 
 
-        oc = meshColor*(incidenceCos*lightIntensity*f + meshColor*ambientIntensity) + phong*WHITE;
-    }
+	oc = meshColor*(incidenceCos*lightIntensity*f + meshColor*ambientIntensity) + phong*WHITE;
+    
     outputColor = vec4(oc.xyz, transparency);
 
 
