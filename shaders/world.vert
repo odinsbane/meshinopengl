@@ -30,7 +30,7 @@ void main() {
 
         //position in clip space.
         gl_Position = perspectiveMatrix*camPosition;
-        pos = position + camOffset;
+        pos = position;
         norm = normal;
         t_norm = normalize(normalModelToCameraMatrix*normal);
         t_pos = camPosition.xyz;

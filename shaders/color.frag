@@ -38,7 +38,8 @@ void main() {
 	vec3 m_norm = vec3(-t_norm.x, -t_norm.y, t_norm.z);
 	float phong = dot(rDir, m_norm);
 	phong = clamp(phong, 0, 1);
-	float f = 1/pow(l, 0.2);
+	float f = 1/pow(l/5.0, 0.25);
+	
 	//phong = incidenceCos!=0?phong:0;
 	phong = pow(phong, SPEC);
 

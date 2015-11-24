@@ -10,9 +10,9 @@
 #include "error.h"
 #include <stdio.h>
 
-float myosin_color[] = {.1,0.1,1,1};
-float actin_color[] = {0.1,1,0,1};
-float linker_color[] = {0.7,0.0,0.7,1};
+float myosin_color[] = {.39,1.0,0.5,1};
+float actin_color[] = {1.0,0.0,0.0,1};
+float linker_color[] = {0.4,0.8,1.0,1};
 float bg[] = {1,1,1};
 
 bool shaderStatus(GLuint &shader);
