@@ -402,8 +402,8 @@ void Simulation::seedMyosinMotors(){
 void Simulation::initialize(){
 
     //singleActinFilament();
-    //freeSeedActinFilaments();
-    seedSphericalActinFilaments();
+    freeSeedActinFilaments();
+    //seedSphericalActinFilaments();
 
     printf("%ld actin filaments\n", actins.size());
     seedMyosinMotors();

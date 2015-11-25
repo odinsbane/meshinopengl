@@ -10,9 +10,9 @@
 #include "error.h"
 #include <stdio.h>
 
-float myosin_color[] = {.39,1.0,0.5,1};
+float myosin_color[] = {0.0,0.0,1.0,1};
 float actin_color[] = {1.0,0.0,0.0,1};
-float linker_color[] = {0.4,0.8,1.0,1};
+float linker_color[] = {0.33,1.0,0.33,1};
 float bg[] = {1,1,1};
 
 bool shaderStatus(GLuint &shader);
@@ -302,17 +302,17 @@ int Display::render(){
         GLint color_loc = glGetUniformLocation(program, "color");
         GLint trans_loc = glGetUniformLocation(program, "transparency");
         GLint mode_loc = glGetUniformLocation(program, "colorMode");
-
+        GLint tog_loc = glGetUniformLocation(program, "toggle");
 
         float* shift = new float[3];
         shift[0] = 0;shift[1]=0;shift[2]=0;shift[3]=0;
         glEnable(GL_CULL_FACE);
-        for(int i=1; i<2; i++) {
+        for(int i=0; i<2; i++) {
             for(int j=1; j<2; j++) {
                 shift[0] = (float)((i-1)*Constants::WIDTH);
                 shift[1] = (float)((j-1)*Constants::WIDTH);
-                glUniform3fv(shift_loc, 1, shift);
-
+                //glUniform3fv(shift_loc, 1, shift);
+                glUniform1i(tog_loc, (i+1)%2);
                 if(i==1 && j==1){
                     glUniform1f(trans_loc, 1.0);
                 } else{

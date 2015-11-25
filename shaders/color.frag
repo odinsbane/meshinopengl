@@ -14,12 +14,12 @@ smooth in vec3 norm;
 smooth in vec3 t_norm;
 smooth in vec3 t_pos;
 
-uniform float transparency;
 uniform vec4 lightIntensity;
 uniform vec4 ambientIntensity;
 
 uniform vec3 lightPos;
 
+float transparency;
 vec4 WHITE=vec4(1,1,1,1);
 float SPEC = 20;
 void main() {
@@ -46,8 +46,12 @@ void main() {
 
 
 	oc = meshColor*(incidenceCos*lightIntensity*f + meshColor*ambientIntensity) + phong*WHITE;
-    
-    outputColor = vec4(oc.xyz, transparency);
+    if(pos.x<-3.2||pos.x>3.2||pos.y<-3.2||pos.y>3.2){
+        outputColor = vec4(0.7, 0.7, 0.7, 1.0);
+    } else{
+       outputColor = vec4(oc.xyz, 1.0);
+    }
+
 
 
 }

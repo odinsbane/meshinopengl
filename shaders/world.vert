@@ -22,7 +22,7 @@ uniform vec4 color;
 uniform vec3 shift;
 
 uniform int colorMode;
-
+uniform int toggle = 1;
 void main() {
         //position in camera space.
         vec4 camPosition = orientationMatrix*(vec4(position+camOffset + shift,1));
@@ -35,7 +35,14 @@ void main() {
         t_norm = normalize(normalModelToCameraMatrix*normal);
         t_pos = camPosition.xyz;
 
-        
+        if(pos.x<-3.2||pos.x>3.2||pos.y<-3.2||pos.y>3.2){
+            gl_Position.z = 10*toggle + (toggle-1)*gl_Position.z;
+        } else{
+            gl_Position.z = 10*(1 - toggle) + toggle*gl_Position.z;
+        }
+
+
+
         meshColor = color;
 
 
