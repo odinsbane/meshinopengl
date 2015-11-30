@@ -35,15 +35,13 @@ void main() {
         t_norm = normalize(normalModelToCameraMatrix*normal);
         t_pos = camPosition.xyz;
 
-        if(pos.x<-3.2||pos.x>3.2||pos.y<-3.2||pos.y>3.2){
-            gl_Position.z = 10*toggle + (toggle-1)*gl_Position.z;
-        } else{
-            gl_Position.z = 10*(1 - toggle) + toggle*gl_Position.z;
-        }
-
 
 
         meshColor = color;
 
-
+        if(pos.x<=-3.2||pos.x>=3.2||pos.y<=-3.2||pos.y>=3.2){
+            gl_Position.z = 1000*toggle + (1-toggle)*gl_Position.z;
+        } else{
+            gl_Position.z = 1000*(1-toggle) + gl_Position.z*toggle;
+        }
 }

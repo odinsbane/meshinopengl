@@ -46,8 +46,13 @@ void main() {
 
 
 	oc = meshColor*(incidenceCos*lightIntensity*f + meshColor*ambientIntensity) + phong*WHITE;
-    if(pos.x<-3.2||pos.x>3.2||pos.y<-3.2||pos.y>3.2){
-        outputColor = vec4(0.7, 0.7, 0.7, 1.0);
+    if(pos.x<=-3.2||pos.x>=3.2||pos.y<=-3.2||pos.y>=3.2){
+
+        if(t_norm.y<0&&t_norm.z<0.1){
+            outputColor = vec4(0,0,0, 1.0);
+        } else{
+            outputColor = vec4(oc.xyz, 0.5);
+        }
     } else{
        outputColor = vec4(oc.xyz, 1.0);
     }

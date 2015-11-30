@@ -129,6 +129,7 @@ int Display::initialize(){
 
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_TRUE);
+    glEnable(GL_BLEND);
     glDepthRange(0.0f, 1.0f);
 
 	glEnable(GL_BLEND);
@@ -309,9 +310,9 @@ int Display::render(){
         glEnable(GL_CULL_FACE);
         for(int i=0; i<2; i++) {
             for(int j=1; j<2; j++) {
-                shift[0] = (float)((i-1)*Constants::WIDTH);
-                shift[1] = (float)((j-1)*Constants::WIDTH);
-                //glUniform3fv(shift_loc, 1, shift);
+                //shift[0] = (float)((i-1)*Constants::WIDTH);
+                //shift[1] = (float)((j-1)*Constants::WIDTH);
+                glUniform3fv(shift_loc, 1, shift);
                 glUniform1i(tog_loc, (i+1)%2);
                 if(i==1 && j==1){
                     glUniform1f(trans_loc, 1.0);
