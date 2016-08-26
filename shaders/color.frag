@@ -41,7 +41,7 @@ void main() {
 	float f = 1/pow(l/5.0, 0.25);
 	
 	//phong = incidenceCos!=0?phong:0;
-	phong = pow(phong, SPEC);
+        phong = pow(phong, SPEC)*0;
 
 
 

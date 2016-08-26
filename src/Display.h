@@ -53,7 +53,7 @@ private:
 
     TiffWriter* writer;
     char* pixbuf;
-    int height = 600;
+    int height = 800;
     int width = 800;
     int last = 200;
     bool writing=false;

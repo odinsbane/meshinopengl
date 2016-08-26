@@ -38,10 +38,9 @@ void main() {
 
 
         meshColor = color;
-
-        if(pos.x<=-3.2||pos.x>=3.2||pos.y<=-3.2||pos.y>=3.2){
+        /*if(pos.x<=-3.2||pos.x>=3.2||pos.y<=-3.2||pos.y>=3.2){
             gl_Position.z = 1000*toggle + (1-toggle)*gl_Position.z;
         } else{
             gl_Position.z = 1000*(1-toggle) + gl_Position.z*toggle;
-        }
+        }*/
 }

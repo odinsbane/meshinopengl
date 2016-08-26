@@ -55,8 +55,8 @@ public:
 };
 
 class MeshHelix : public CylinderRepresentation{
-    int c_divs = 5;
-    int l_divs = 10;
+    int c_divs = 10;
+    int l_divs = 75;
     double pitch = 42.4539; //2 pi every 37nm
     //double pitch = PI/2.0;
     double eccentricity = 0.5;
@@ -80,7 +80,7 @@ class MeshMyosin : public CylinderRepresentation{
     int l_divs = 10;
     double pitch = 0; //2 pi every 37nm
     //double pitch = PI/2.0;
-    double eccentricity = 0.1;
+    double eccentricity = 0.5;
     int floats, position_offset, element_node_count;
     void updateTriangle(float* target, glm::dvec3 &a, glm::dvec3 &b, glm::dvec3 &c, glm::dvec3 &na, glm::dvec3 &nb, glm::dvec3 &nc);
 public:
