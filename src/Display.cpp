@@ -117,8 +117,12 @@ int Display::initialize(){
     glfwMakeContextCurrent(window);
     
 #ifndef __APPLE__
-    glewExperimental = GL_TRUE;
-    glewInit();
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+        {
+            glfwTerminate();
+            printf("Failed to initialize OpenGL context\n");
+            return 0;
+        }
 #endif
 
     glEnable(GL_CULL_FACE);

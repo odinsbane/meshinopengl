@@ -1,7 +1,7 @@
 #ifndef _CELL_CAM
 #define _CELL_CAM
 #ifndef __APPLE__
-    #include <GL/glew.h>
+    #include "glad/glad.h"
     #include "GLFW/glfw3.h"
 #else
     #define GLFW_INCLUDE_GLCOREARB

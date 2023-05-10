@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 paluchlab. All rights reserved.
 //
 #ifndef __APPLE__
-  #include <GL/glew.h>
+  #include "glad/glad.h"
 #else
   #define GLFW_INCLUDE_GLCOREARB
   #define GLFW_NO_GLU
